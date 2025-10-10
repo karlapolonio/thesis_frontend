@@ -2,7 +2,9 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Platform, Alert, KeyboardAvoidingView } from "react-native";
 import styles from '../styles/RegisterStyle';
 import axios from "axios";
-import { BACKEND_URL } from "../Config";
+import Constants from 'expo-constants';
+
+const { API_KEY, BACKEND_URL } = Constants.expoConfig.extra;
 
 const API_BASE_URL = `${BACKEND_URL}/account`;
 
@@ -26,7 +28,7 @@ const Register = ({ navigation }) => {
         },
         {
           headers: {
-            "x-api-key": "",
+            "x-api-key": API_KEY,
           },
         }
       );
