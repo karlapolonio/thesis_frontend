@@ -6,6 +6,7 @@ import { UserProvider } from './UserContext';
 import Register from './screens/RegisterScreen';
 import Login from './screens/LoginScreen';
 import Form from './screens/FormScreen';
+import Main from './screens/MainScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,7 +15,7 @@ export default function App() {
     <SafeAreaProvider>
       <UserProvider>
         <NavigationContainer>
-          <Stack.Navigator initialRouteName="Form">
+          <Stack.Navigator initialRouteName="Main">
             <Stack.Screen
               name="Login"
               component={Login}
@@ -28,6 +29,11 @@ export default function App() {
             <Stack.Screen
               name="Form"
               component={Form}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Main"
+              component={Main}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>
