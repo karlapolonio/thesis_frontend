@@ -2,16 +2,14 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Platform, Alert, KeyboardAvoidingView } from "react-native";
 import styles from '../styles/RegisterStyle';
 import axios from "axios";
-import Constants from 'expo-constants';
-
-const { API_KEY, BACKEND_URL } = Constants.expoConfig.extra;
-
-const API_BASE_URL = `${BACKEND_URL}/account`;
+import { useUser } from "../UserContext"; 
 
 const Register = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const { BACKEND_URL, API_KEY } = useUser();
 
   const handleRegister = async () => {
     if (!username || !email || !password) {
@@ -20,7 +18,7 @@ const Register = ({ navigation }) => {
     }
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/register`,
+        `${BACKEND_URL}/account/register`,
         {
           username,
           email,

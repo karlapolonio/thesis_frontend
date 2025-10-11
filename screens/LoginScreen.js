@@ -14,13 +14,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import styles from "../styles/LoginStyle";
 import axios from "axios";
 import { useUser } from "../UserContext";
-import Constants from "expo-constants";
-
-const { API_KEY, BACKEND_URL } = Constants.expoConfig.extra;
-const API_BASE_URL = `${BACKEND_URL}/account`;
 
 const Login = ({ navigation }) => {
-  const { setUserId } = useUser();
+  const { setUserId, BACKEND_URL, API_KEY } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +31,7 @@ const Login = ({ navigation }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/login`,
+        `${BACKEND_URL}/account/login`,
         { email, password },
         { headers: { "x-api-key": API_KEY } }
       );

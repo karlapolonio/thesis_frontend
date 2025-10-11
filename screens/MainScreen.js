@@ -9,10 +9,13 @@ import LogNav from '../navbar/LogNav';
 import ResultNav from '../navbar/ResultNav';
 import SettingNav from '../navbar/SettingNav';
 
+import { useUser } from "../UserContext";
+
 const Tab = createBottomTabNavigator();
 
 export default function Main() {
   const tabRef = useRef();
+  const { userId, API_KEY, BACKEND_URL } = useUser();
 
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -35,21 +38,24 @@ export default function Main() {
       >
         <Tab.Screen
           name="Home"
-          component={HomeNav}
           options={{
             tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
           }}
-        />
+        >
+          {() => <HomeNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+        </Tab.Screen>
+
         <Tab.Screen
           name="Log"
-          component={LogNav}
           options={{
             tabBarIcon: ({ color }) => <MaterialIcons name="calendar-today" size={28} color={color} />,
           }}
-        />
+        >
+          {() => <LogNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+        </Tab.Screen>
+
         <Tab.Screen
           name="Camera"
-          component={HomeNav}
           options={{
             tabBarIcon: ({ color }) => <MaterialIcons name="photo-camera" size={28} color={color} />,
           }}
@@ -69,22 +75,34 @@ export default function Main() {
               }
             },
           })}
-        />
+        >
+          {() => <HomeNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+        </Tab.Screen>
+
         <Tab.Screen
           name="Result"
           options={{
             tabBarIcon: ({ color }) => <MaterialIcons name="restaurant" size={28} color={color} />,
           }}
         >
-          {({ route }) => <ResultNav photoUri={route.params?.photoUri} />}
+          {({ route }) => (
+            <ResultNav
+              photoUri={route.params?.photoUri}
+              userId={userId}
+              API_KEY={API_KEY}
+              BACKEND_URL={BACKEND_URL}
+            />
+          )}
         </Tab.Screen>
+
         <Tab.Screen
           name="Settings"
-          component={SettingNav}
           options={{
             tabBarIcon: ({ color }) => <MaterialIcons name="settings" size={28} color={color} />,
           }}
-        />
+        >
+          {() => <SettingNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+        </Tab.Screen>
       </Tab.Navigator>
     </SafeAreaView>
   );

@@ -4,12 +4,9 @@ import { useState } from 'react';
 import styles from "../styles/FormStyle";
 import { useUser } from "../UserContext";
 import axios from "axios";
-import { BACKEND_URL } from '../Config';
-
-const API_BASE_URL = `${BACKEND_URL}/profile`;
 
 export default function Form({ navigation }) {
-  const { userId } = useUser();
+  const { userId, BACKEND_URL, API_KEY } = useUser();
 
   const [formData, setFormData] = useState({
     userId: userId,
@@ -35,7 +32,14 @@ export default function Form({ navigation }) {
         return;
       }
 
-      const response = await axios.post(`${API_BASE_URL}/submit/${userId}`, formData);
+      const response = await axios.post(`${BACKEND_URL}/profile/submit/${userId}`, formData,
+        {
+          headers: {
+            'x-api-key': API_KEY
+          },
+        }
+      );
+
       Alert.alert("Success", response.data.message);
       navigation.navigate("Main");
     } catch (error) {
@@ -68,7 +72,7 @@ export default function Form({ navigation }) {
               <TextInput
                 style={styles.input}
                 value={formData.firstField}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, firstField: text }))}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, first_field: text }))}
               />
             </View>
             <View style={styles.inputGroup}>
@@ -76,7 +80,7 @@ export default function Form({ navigation }) {
               <TextInput
                 style={styles.input}
                 value={formData.secondField}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, secondField: text }))}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, second_field: text }))}
               />
             </View>
           </View>
@@ -90,7 +94,7 @@ export default function Form({ navigation }) {
                 onPress={() => setShowThirdDD(true)}
               >
                 <Text style={styles.dropdownButtonText}>
-                  {formData.thirdField}
+                  {formData.third_field}
                 </Text>
                 <Text style={styles.dropdownArrow}>▼</Text>
               </TouchableOpacity>
@@ -103,7 +107,7 @@ export default function Form({ navigation }) {
                 onPress={() => setShowFourthDD(true)}
               >
                 <Text style={styles.dropdownButtonText}>
-                  {formData.fourthField}
+                  {formData.fourth_field}
                 </Text>
                 <Text style={styles.dropdownArrow}>▼</Text>
               </TouchableOpacity>
@@ -119,7 +123,7 @@ export default function Form({ navigation }) {
                 onPress={() => setShowFifthDD(true)}
               >
                 <Text style={styles.dropdownButtonText}>
-                  {formData.fifthField}
+                  {formData.fifth_field}
                 </Text>
                 <Text style={styles.dropdownArrow}>▼</Text>
               </TouchableOpacity>

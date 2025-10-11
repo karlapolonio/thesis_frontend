@@ -1,4 +1,7 @@
 import { createContext, useContext, useState } from "react";
+import Constants from "expo-constants";
+
+const { API_KEY, BACKEND_URL } = Constants.expoConfig.extra;
 
 const UserContext = createContext();
 
@@ -11,7 +14,8 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ userId, setUserId, mealRefreshCounter, setMealRefreshCounter, triggerMealRefresh}}>
+    <UserContext.Provider value={{ userId, setUserId, mealRefreshCounter, setMealRefreshCounter, 
+                                    triggerMealRefresh, API_KEY, BACKEND_URL}}>
       {children}
     </UserContext.Provider>
   );
