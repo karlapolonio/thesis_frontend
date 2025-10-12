@@ -35,8 +35,6 @@ const Login = ({ navigation }) => {
         { email, password },
         { headers: { "x-api-key": API_KEY } }
       );
-
-      console.log("User logged in:", response.data);
       setUserId(response.data.user_id);
 
       setTimeout(() => {
@@ -48,7 +46,6 @@ const Login = ({ navigation }) => {
         setLoading(false);
       }, 500);
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
       Alert.alert(
         "Error",
         error.response?.data?.detail || "Something went wrong"

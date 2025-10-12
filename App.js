@@ -15,26 +15,31 @@ export default function App() {
     <SafeAreaProvider>
       <UserProvider>
         <NavigationContainer>
-          <Stack.Navigator initialRouteName="Login">
+          <Stack.Navigator
+            initialRouteName="Login"
+            screenOptions={{
+              headerShown: false, // hide header for all screens
+            }}
+          >
             <Stack.Screen
               name="Login"
               component={Login}
-              options={{ headerShown: false }}
+              options={{ animation: "slide_from_left" }}
             />
             <Stack.Screen
               name="Register"
               component={Register}
-              options={{ headerShown: false }}
+              options={{ animation: "slide_from_right" }}
             />
             <Stack.Screen
               name="Form"
               component={Form}
-              options={{ headerShown: false }}
+              options={{ animation: "fade_from_bottom" }}
             />
             <Stack.Screen
               name="Main"
               component={Main}
-              options={{ headerShown: false }}
+              options={{ animation: "fade_from_bottom" }}
             />
           </Stack.Navigator>
         </NavigationContainer>
