@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Animated } from "react-native";
 import { useUser } from "../UserContext";
-import { BACKEND_URL } from "../Config";
 
 const GOALS = {
   calories: 1000,
@@ -10,8 +9,8 @@ const GOALS = {
   fat: 1000,
 };
 
-export default function HomeNav() {
-  const { userId, mealRefreshCounter } = useUser();
+export default function HomeNav({userId, BACKEND_URL, API_KEY}) {
+  const { mealRefreshCounter } = useUser();
   const [todayTotals, setTodayTotals] = useState({
     calories: 0,
     protein: 0,
@@ -30,10 +29,15 @@ export default function HomeNav() {
     const fetchTodayTotals = async () => {
       try {
         const today = new Date().toISOString().split("T")[0];
-        const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${today}`);
+        const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${today}`,
+          {
+            headers: { "x-api-key": API_KEY } ,
+          }
+        );
         const meals = await res.json();
 
-        // Sum all totals
+        console.log(meals);
+
         const totals = meals.reduce(
           (acc, meal) => ({
             calories: acc.calories + (meal.total_calories || 0),
@@ -46,7 +50,6 @@ export default function HomeNav() {
 
         setTodayTotals(totals);
 
-        // Animate bars
         Object.keys(totals).forEach((key) => {
           Animated.timing(animatedValues[key], {
             toValue: Math.min((totals[key] / GOALS[key]) * 100, 100),

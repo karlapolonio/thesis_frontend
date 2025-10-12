@@ -14,19 +14,16 @@ import {
 import axios from "axios";
 import styles from "../styles/ResultStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BACKEND_URL } from "../Config";
 import { useUser } from "../UserContext";
 
-const API_PREDICT_URL = `${BACKEND_URL}/predict/food`;
-
-export default function ResultNav({ photoUri, setPhotoUri }) {
+export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
+  const API_PREDICT_URL = `${BACKEND_URL}/predict/food`;
   const [predictions, setPredictions] = useState([]);
   const [segmentedImage, setSegmentedImage] = useState(null);
   const [servings, setServings] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { userId, setMealRefreshCounter } = useUser();
+  const { setMealRefreshCounter } = useUser();
 
-  // Send photo to backend API
   useEffect(() => {
     if (!photoUri) return;
 
@@ -41,7 +38,9 @@ export default function ResultNav({ photoUri, setPhotoUri }) {
         });
 
         const response = await axios.post(API_PREDICT_URL, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { "Content-Type": "multipart/form-data",
+                     "x-api-key": API_KEY
+          },
         });
 
         const { predictions: preds, image } = response.data;
@@ -59,7 +58,6 @@ export default function ResultNav({ photoUri, setPhotoUri }) {
     sendPhotoToAPI();
   }, [photoUri]);
 
-  // Calculate totals
   const totals = useMemo(() => {
     return predictions.reduce(
       (acc, item, idx) => {
@@ -88,14 +86,19 @@ export default function ResultNav({ photoUri, setPhotoUri }) {
 
   const saveMealAndFoods = async () => {
     try {
-      // Save meal
       const mealResponse = await axios.post(`${BACKEND_URL}/meal/`, {
         user_id: userId,
         total_calories: totals.calories,
         total_protein: totals.protein,
         total_carbs: totals.carbs,
         total_fat: totals.fat,
-      });
+      },
+      {
+        headers: {
+          "x-api-key": API_KEY
+        },
+      }
+    );
 
       const mealId = mealResponse.data.id;
       
@@ -114,12 +117,18 @@ export default function ResultNav({ photoUri, setPhotoUri }) {
         };
       });
 
-      // Save foods
       const foodResponse = await axios.post(`${BACKEND_URL}/log_food/`, {
         user_id: userId,
         meal_id: mealId,
         foods: foodsPayload,
-      });
+      },
+      {
+        headers: {
+          "x-api-key": API_KEY
+        },
+      }
+    
+      );
 
       Alert.alert(
         "Success",

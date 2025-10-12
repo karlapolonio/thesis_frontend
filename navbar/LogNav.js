@@ -13,14 +13,12 @@ import {
 import { Calendar } from 'react-native-calendars';
 import { useState, useEffect } from 'react';
 import { useUser } from '../UserContext';
-import { BACKEND_URL } from '../Config';
 
-export default function LogNav() {
-  const { userId, mealRefreshCounter, triggerMealRefresh } = useUser();
+export default function LogNav({userId, BACKEND_URL, API_KEY}) {
+  const { mealRefreshCounter, triggerMealRefresh } = useUser();
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [meals, setMeals] = useState([]);
   const [groupedMeals, setGroupedMeals] = useState({});
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [foodLogs, setFoodLogs] = useState([]);
@@ -32,7 +30,14 @@ export default function LogNav() {
 
   const fetchMeals = async (date) => {
     try {
-      const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`);
+      const res = await fetch(
+        `${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`,
+        {
+          headers: {
+            "x-api-key": API_KEY
+          }
+        }
+      );
       const data = await res.json();
       const sorted = data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
@@ -43,7 +48,6 @@ export default function LogNav() {
         grouped[time].push(meal);
       });
 
-      setMeals(sorted);
       setGroupedMeals(grouped);
     } catch (err) {
       console.error(err);
@@ -52,7 +56,14 @@ export default function LogNav() {
 
   const fetchFoodLogs = async (meal) => {
     try {
-      const res = await fetch(`${BACKEND_URL}/log_food/?user_id=${userId}&meal_id=${meal.id}`);
+      const res = await fetch(
+        `${BACKEND_URL}/log_food/?user_id=${userId}&meal_id=${meal.id}`,
+        {
+          headers: {
+            "x-api-key": API_KEY
+          },
+        }
+      );
       const data = await res.json();
       setFoodLogs(data);
       setSelectedMeal(meal);
@@ -73,24 +84,35 @@ export default function LogNav() {
           style: "destructive",
           onPress: async () => {
             try {
+              console.log("Deleting meal:", mealId);
               const res = await fetch(`${BACKEND_URL}/meal/${mealId}`, {
-                method: 'DELETE',
+                method: "DELETE",
+                headers: {
+                  "x-api-key": API_KEY,
+                },
               });
+
+              const data = await res.json();
+              console.log("Response data:", data);
+
               if (res.ok) {
                 setModalVisible(false);
                 fetchMeals(selectedDate);
                 triggerMealRefresh();
               } else {
-                console.error("Failed to delete meal");
+                console.error("Failed to delete meal:", data.detail || data);
+                Alert.alert("Error", data.detail || "Failed to delete meal");
               }
             } catch (err) {
-              console.error(err);
+              console.error("Delete meal error:", err);
+              Alert.alert("Error", "Failed to delete meal due to network or server error");
             }
           },
         },
       ]
     );
   };
+
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
