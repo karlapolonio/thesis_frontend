@@ -1,4 +1,3 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -8,21 +7,27 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useState, useEffect } from 'react';
 import { useUser } from '../UserContext';
 
-export default function LogNav({userId, BACKEND_URL, API_KEY}) {
+const getLocalDateString = (date = new Date()) => {
+  const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  console.log(localTime);
+  return localTime.toISOString().split('T')[0];
+};
+
+export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
   const { mealRefreshCounter, triggerMealRefresh } = useUser();
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString());
   const [groupedMeals, setGroupedMeals] = useState({});
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [foodLogs, setFoodLogs] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [loadingMeals, setLoadingMeals] = useState(false);
 
   useEffect(() => {
     fetchMeals(selectedDate);
@@ -30,27 +35,38 @@ export default function LogNav({userId, BACKEND_URL, API_KEY}) {
 
   const fetchMeals = async (date) => {
     try {
-      const res = await fetch(
-        `${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`,
-        {
-          headers: {
-            "x-api-key": API_KEY
-          }
-        }
-      );
-      const data = await res.json();
-      const sorted = data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      setLoadingMeals(true);
+      const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`, {
+        headers: { "x-api-key": API_KEY },
+      });
 
+      if (!res.ok) {
+        setGroupedMeals({});
+        return;
+      }
+
+      const data = await res.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        setGroupedMeals({});
+        return;
+      }
+
+      const sorted = data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
       const grouped = {};
+
       sorted.forEach((meal) => {
-        const time = formatTime(meal.timestamp);
+        const time = formatTime(meal.created_at);
         if (!grouped[time]) grouped[time] = [];
         grouped[time].push(meal);
       });
 
       setGroupedMeals(grouped);
     } catch (err) {
-      console.error(err);
+      console.error("Network or fetch error:", err);
+      setGroupedMeals({});
+    } finally {
+      setLoadingMeals(false);
     }
   };
 
@@ -58,18 +74,26 @@ export default function LogNav({userId, BACKEND_URL, API_KEY}) {
     try {
       const res = await fetch(
         `${BACKEND_URL}/log_food/?user_id=${userId}&meal_id=${meal.id}`,
-        {
-          headers: {
-            "x-api-key": API_KEY
-          },
-        }
+        { headers: { "x-api-key": API_KEY } }
       );
+
+      if (!res.ok) {
+        console.error("Server error fetching food logs:", res.status, res.statusText);
+        setFoodLogs([]);
+        setSelectedMeal(meal);
+        setModalVisible(true);
+        return;
+      }
+
       const data = await res.json();
-      setFoodLogs(data);
+      setFoodLogs(Array.isArray(data) ? data : []);
       setSelectedMeal(meal);
       setModalVisible(true);
     } catch (err) {
-      console.error(err);
+      console.error("Network error fetching food logs:", err);
+      setFoodLogs([]);
+      setSelectedMeal(meal);
+      setModalVisible(true);
     }
   };
 
@@ -84,28 +108,21 @@ export default function LogNav({userId, BACKEND_URL, API_KEY}) {
           style: "destructive",
           onPress: async () => {
             try {
-              console.log("Deleting meal:", mealId);
               const res = await fetch(`${BACKEND_URL}/meal/${mealId}`, {
                 method: "DELETE",
-                headers: {
-                  "x-api-key": API_KEY,
-                },
+                headers: { "x-api-key": API_KEY },
               });
-
               const data = await res.json();
-              console.log("Response data:", data);
-
               if (res.ok) {
                 setModalVisible(false);
                 fetchMeals(selectedDate);
                 triggerMealRefresh();
               } else {
-                console.error("Failed to delete meal:", data.detail || data);
                 Alert.alert("Error", data.detail || "Failed to delete meal");
               }
             } catch (err) {
               console.error("Delete meal error:", err);
-              Alert.alert("Error", "Failed to delete meal due to network or server error");
+              Alert.alert("Error", "Network or server error");
             }
           },
         },
@@ -113,15 +130,16 @@ export default function LogNav({userId, BACKEND_URL, API_KEY}) {
     );
   };
 
-
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
+  const formatTime = (isoString) => {
+    const date = new Date(isoString);
+    let hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12;
     return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
+
+
 
   const getNumberedMeals = () => {
     let counter = 1;
@@ -139,126 +157,156 @@ export default function LogNav({userId, BACKEND_URL, API_KEY}) {
 
   const numberedMeals = getNumberedMeals();
 
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  const todayStr = getLocalDateString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = getLocalDateString(yesterday);
+
+  const formatDateTitle = (dateStr) => {
+    if (dateStr === todayStr) return "Meals Today";
+    if (dateStr === yesterdayStr) return "Meals Yesterday";
+    return `Meals on ${new Date(dateStr).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })}`;
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+    <ScrollView style={{ flex: 1, padding: 10, backgroundColor: '#ffffff' }}>
       <Text style={styles.calendarTitle}>Log</Text>
-      <ScrollView style={{ flex: 1, padding: 10, backgroundColor: '#ffffff' }}>
-        <Calendar
-          current={selectedDate}
-          style={{ backgroundColor: '#6cd171ff', borderRadius: 20 }}
-          onDayPress={(day) => setSelectedDate(day.dateString)}
-          theme={{
-            textSectionTitleColor: '#2e7d32',
-            arrowColor: '#27ae60',
-            monthTextColor: '#2e7d32',
-            todayTextColor: '#27ae60',
-          }}
-          dayComponent={({ date, state }) => {
-            const isSelected = date.dateString === selectedDate;
-            const todayStr = new Date().toISOString().split('T')[0];
-            const bgColor = isSelected ? '#27ae60' : 'transparent';
-            const textColor = isSelected ? '#ffffff' : state === 'disabled' ? '#a5d6a7' : '#2e7d32';
-            const fontWeight = date.dateString === todayStr ? 'bold' : '400';
-            return (
+      <Calendar
+        current={selectedDate}
+        style={{ backgroundColor: '#6cd171ff', borderRadius: 20 }}
+        onDayPress={(day) => {
+          if (day.dateString > todayStr) {
+            Alert.alert("Invalid Date", "You cannot select a future date.");
+            return;
+          }
+          setSelectedDate(day.dateString);
+        }}
+        theme={{
+          textSectionTitleColor: '#2e7d32',
+          arrowColor: '#27ae60',
+          monthTextColor: '#2e7d32',
+          todayTextColor: '#27ae60',
+        }}
+        dayComponent={({ date, state }) => {
+          const isSelected = date.dateString === selectedDate;
+          const bgColor = isSelected ? '#27ae60' : 'transparent';
+          const isFuture = date.dateString > todayStr;
+          const textColor = isFuture
+            ? '#bdbdbd'
+            : isSelected
+            ? '#ffffff'
+            : '#2e7d32';
+          const fontWeight = date.dateString === todayStr ? 'bold' : '400';
+          return (
+            <TouchableOpacity
+              disabled={isFuture}
+              style={{
+                backgroundColor: bgColor,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginVertical: 2,
+                opacity: isFuture ? 0.4 : 1,
+              }}
+              onPress={() => setSelectedDate(date.dateString)}
+            >
+              <Text style={{ color: textColor, fontWeight }}>{date.day}</Text>
+            </TouchableOpacity>
+          );
+        }}
+      />
+
+      <Text style={styles.title}>{formatDateTitle(selectedDate)}</Text>
+
+      {loadingMeals ? (
+        <View style={{ marginTop: 30, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#27ae60" />
+        </View>
+      ) : Object.keys(numberedMeals).length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No meals recorded for this day.</Text>
+        </View>
+      ) : (
+        Object.keys(numberedMeals).map((time) => (
+          <View key={time} style={{ marginBottom: 15 }}>
+            <Text style={styles.timeHeader}>{time}</Text>
+            {numberedMeals[time].map((meal) => (
               <TouchableOpacity
-                style={{
-                  backgroundColor: bgColor,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginVertical: 2,
-                }}
-                onPress={() => setSelectedDate(date.dateString)}
+                key={meal.id}
+                style={styles.mealCard}
+                onPress={() => fetchFoodLogs(meal)}
               >
-                <Text style={{ color: textColor, fontWeight }}>{date.day}</Text>
+                <View style={styles.mealHeader}>
+                  <Text style={styles.mealName}>
+                    {meal.name || `Meal ${meal.mealNumber}`}
+                  </Text>
+                  <Text style={styles.mealCalories}>
+                    {meal.total_calories.toFixed(1)} kcal
+                  </Text>
+                </View>
+                <View style={styles.macrosRow}>
+                  <Text style={styles.macroBadge}>{meal.total_protein.toFixed(1)}g P</Text>
+                  <Text style={styles.macroBadge}>{meal.total_carbs.toFixed(1)}g C</Text>
+                  <Text style={styles.macroBadge}>{meal.total_fat.toFixed(1)}g F</Text>
+                </View>
               </TouchableOpacity>
-            );
-          }}
-        />
-
-        <Text style={styles.title}>Meals on {formatDate(selectedDate)}</Text>
-        {Object.keys(numberedMeals).length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No meals recorded for this day.</Text>
+            ))}
           </View>
-        ) : (
-          Object.keys(numberedMeals).map((time) => (
-            <View key={time} style={{ marginBottom: 15 }}>
-              <Text style={styles.timeHeader}>{time}</Text>
-              {numberedMeals[time].map((meal) => (
-                <TouchableOpacity
-                  key={meal.id}
-                  style={styles.mealCard}
-                  onPress={() => fetchFoodLogs(meal)}
-                >
-                  <View style={styles.mealHeader}>
-                    <Text style={styles.mealName}>{meal.name || `Meal ${meal.mealNumber}`}</Text>
-                    <Text style={styles.mealCalories}>{meal.total_calories.toFixed(1)} kcal</Text>
-                  </View>
-                  <View style={styles.macrosRow}>
-                    <Text style={styles.macroBadge}>{meal.total_protein.toFixed(1)}g P</Text>
-                    <Text style={styles.macroBadge}>{meal.total_carbs.toFixed(1)}g C</Text>
-                    <Text style={styles.macroBadge}>{meal.total_fat.toFixed(1)}g F</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))
-        )}
+        ))
+      )}
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                Food Logs for {selectedMeal?.name || `Meal ${selectedMeal?.mealNumber}`}
-              </Text>
+      {/* Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              Food Logs for {selectedMeal?.name || `Meal ${selectedMeal?.mealNumber}`}
+            </Text>
 
-              <FlatList
-                data={foodLogs}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                  <View style={styles.foodItem}>
-                    <Text style={styles.foodName}>{item.food_name}</Text>
-                    <Text style={styles.foodMacros}>
-                      {item.calories.toFixed(1)} kcal • {item.protein.toFixed(1)}g P • {item.carbs.toFixed(1)}g C • {item.fat.toFixed(1)}g F
-                    </Text>
-                  </View>
-                )}
-              />
+            <FlatList
+              data={foodLogs}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.foodItem}>
+                  <Text style={styles.foodName}>{item.food_name}</Text>
+                  <Text style={styles.foodMacros}>
+                    {item.calories.toFixed(1)} kcal • {item.protein.toFixed(1)}g P •{' '}
+                    {item.carbs.toFixed(1)}g C • {item.fat.toFixed(1)}g F
+                  </Text>
+                </View>
+              )}
+            />
 
-              <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.closeText}>Close</Text>
-              </Pressable>
+            <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.closeText}>Close</Text>
+            </Pressable>
 
-              <Pressable
-                style={[styles.closeButton, { backgroundColor: 'red', marginTop: 10 }]}
-                onPress={() => deleteMeal(selectedMeal.id)}
-              >
-                <Text style={styles.closeText}>Delete Meal</Text>
-              </Pressable>
-            </View>
+            <Pressable
+              style={[styles.closeButton, { backgroundColor: 'red', marginTop: 10 }]}
+              onPress={() => deleteMeal(selectedMeal.id)}
+            >
+              <Text style={styles.closeText}>Delete Meal</Text>
+            </Pressable>
           </View>
-        </Modal>
-      </ScrollView>
-    </SafeAreaView>
+        </View>
+      </Modal>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  calendarTitle: { fontSize: 22, fontWeight: 'bold', color: '#2e7d32', margin: 20 },
-  container: { flex: 1 },
+  calendarTitle: { fontSize: 22, fontWeight: 'bold', color: '#2e7d32', marginLeft: 10, marginTop:25, marginBottom: 15 },
   title: { fontSize: 18, fontWeight: 'bold', marginVertical: 10 },
   timeHeader: { fontSize: 16, fontWeight: 'bold', marginVertical: 5 },
   mealCard: {
@@ -276,13 +324,37 @@ const styles = StyleSheet.create({
   mealName: { fontSize: 16, fontWeight: 'bold', color: '#2e7d32' },
   mealCalories: { fontSize: 16, fontWeight: 'bold', color: '#27ae60' },
   macrosRow: { flexDirection: 'row', marginTop: 5, justifyContent: 'space-between' },
-  macroBadge: { backgroundColor: '#f0f0f0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, fontSize: 12, color: '#2e7d32' },
+  macroBadge: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    fontSize: 12,
+    color: '#2e7d32',
+  },
   emptyContainer: { padding: 20, alignItems: 'center', marginVertical: 20 },
   emptyText: { color: '#2e7d32', fontStyle: 'italic' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '90%', maxHeight: '80%', backgroundColor: '#fff', borderRadius: 10, padding: 20 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+  },
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  closeButton: { marginTop: 15, padding: 10, backgroundColor: 'green', borderRadius: 8, alignItems: 'center' },
+  closeButton: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: 'green',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
   closeText: { color: '#fff', fontWeight: 'bold' },
   foodItem: { paddingVertical: 6, borderBottomWidth: 1, borderColor: '#eee' },
   foodName: { fontWeight: 'bold', fontSize: 14, color: '#2e7d32' },

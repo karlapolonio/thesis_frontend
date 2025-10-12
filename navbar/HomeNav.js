@@ -28,15 +28,18 @@ export default function HomeNav({userId, BACKEND_URL, API_KEY}) {
   useEffect(() => {
     const fetchTodayTotals = async () => {
       try {
-        const today = new Date().toISOString().split("T")[0];
-        const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${today}`,
-          {
-            headers: { "x-api-key": API_KEY } ,
-          }
-        );
+        const today = new Date();
+        const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+          .toISOString()
+          .split("T")[0];
+
+        const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${localToday}`, {
+          headers: { "x-api-key": API_KEY },
+        });
+
         const meals = await res.json();
 
-        console.log(meals);
+        console.log("Meals for today:", meals);
 
         const totals = meals.reduce(
           (acc, meal) => ({
@@ -64,6 +67,7 @@ export default function HomeNav({userId, BACKEND_URL, API_KEY}) {
 
     fetchTodayTotals();
   }, [mealRefreshCounter, userId]);
+
 
   const renderProgressBar = (label, value, goal, color, animatedValue) => {
     return (

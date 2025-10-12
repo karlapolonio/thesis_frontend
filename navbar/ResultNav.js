@@ -23,6 +23,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
   const [servings, setServings] = useState([]);
   const [loading, setLoading] = useState(false);
   const { setMealRefreshCounter } = useUser();
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!photoUri) return;
@@ -86,22 +87,25 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
 
   const saveMealAndFoods = async () => {
     try {
+      setSaving(true); // start spinner
+      const now = new Date();
+      const localISOTime = new Date(
+        now.getTime() - now.getTimezoneOffset() * 60000
+      ).toISOString();
+
       const mealResponse = await axios.post(`${BACKEND_URL}/meal/`, {
         user_id: userId,
         total_calories: totals.calories,
         total_protein: totals.protein,
         total_carbs: totals.carbs,
         total_fat: totals.fat,
-      },
-      {
-        headers: {
-          "x-api-key": API_KEY
-        },
-      }
-    );
+        created_at: localISOTime,
+      }, {
+        headers: { "x-api-key": API_KEY },
+      });
 
       const mealId = mealResponse.data.id;
-      
+
       const foodsPayload = predictions.map((item, index) => {
         const baseServing = Number(item?.nutrition?.serving_weight_grams) || 0;
         const serving = Number(servings[index]) || 0;
@@ -117,26 +121,24 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
         };
       });
 
-      const foodResponse = await axios.post(`${BACKEND_URL}/log_food/`, {
+      await axios.post(`${BACKEND_URL}/log_food/`, {
         user_id: userId,
         meal_id: mealId,
         foods: foodsPayload,
-      },
-      {
-        headers: {
-          "x-api-key": API_KEY
-        },
-      }
-    
-      );
+      }, {
+        headers: { "x-api-key": API_KEY },
+      });
 
-      Alert.alert(
-        "Success",
-        `Meal and ${foodResponse.data.count} food logs saved successfully!`
-      );
-      triggerMealRefresh();
+      // Show spinner for 1 second before stopping
+      setTimeout(() => {
+        setSaving(false);
+        Alert.alert("Success", "Meal and food logs saved successfully!");
+        triggerMealRefresh();
+      }, 1000);
+
     } catch (error) {
       console.error(error.response || error.message);
+      setSaving(false);
       Alert.alert("Error", "Failed to save meal or food logs.");
     }
   };
@@ -170,102 +172,118 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
         <ScrollView contentContainerStyle={styles.container}>
-          {/* Captured Image */}
           <View style={styles.section}>
             <Text style={styles.title}>Captured Image</Text>
             <Image source={{ uri: photoUri }} style={styles.image} resizeMode="contain" />
           </View>
 
-          {/* Segmented Image */}
-          {segmentedImage && (
-            <View style={styles.section}>
-              <Text style={styles.title}>Food Recognition</Text>
-              <Image
-                source={{ uri: `data:image/jpeg;base64,${segmentedImage}` }}
-                style={styles.image}
-                resizeMode="contain"
-              />
-            </View>
-          )}
+          {predictions.length > 0 ? (
+            <>
+              {segmentedImage && (
+                <View style={styles.section}>
+                  <Text style={styles.title}>Food Recognition</Text>
+                  <Image
+                    source={{ uri: `data:image/jpeg;base64,${segmentedImage}` }}
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                </View>
+              )}
 
-          {/* Nutrition Totals */}
-          <View style={styles.section}>
-            <Text style={styles.title}>Nutritional Analysis</Text>
-            <View style={styles.totalBoxContainer}>
-              <View style={styles.totalBox}>
-                <Text style={styles.totalLabel}>Total Calories</Text>
-                <Text style={styles.totalValue}>{totals.calories.toFixed(1)} kcal</Text>
-              </View>
-              <View style={styles.totalBox}>
-                <Text style={styles.totalLabel}>Total Protein</Text>
-                <Text style={styles.totalValue}>{totals.protein.toFixed(1)} g</Text>
-              </View>
-              <View style={styles.totalBox}>
-                <Text style={styles.totalLabel}>Total Carbs</Text>
-                <Text style={styles.totalValue}>{totals.carbs.toFixed(1)} g</Text>
-              </View>
-              <View style={styles.totalBox}>
-                <Text style={styles.totalLabel}>Total Fat</Text>
-                <Text style={styles.totalValue}>{totals.fat.toFixed(1)} g</Text>
-              </View>
-            </View>
-
-            {/* Predictions List */}
-            {predictions.map((item, index) => {
-              const baseServing = Number(item?.nutrition?.serving_weight_grams) || 0;
-              const serving = Number(servings[index]) || 0;
-              const factor = baseServing === 0 ? 0 : serving / baseServing;
-
-              const adjusted = {
-                calories: ((Number(item?.nutrition?.calories) || 0) * factor).toFixed(1),
-                protein: ((Number(item?.nutrition?.protein) || 0) * factor).toFixed(1),
-                carbs: ((Number(item?.nutrition?.carbs) || 0) * factor).toFixed(1),
-                fat: ((Number(item?.nutrition?.fat) || 0) * factor).toFixed(1),
-              };
-
-              return (
-                <View key={index} style={styles.predItem}>
-                  <Text style={styles.predText}>{item.label}</Text>
-
-                  <View style={styles.servingRow}>
-                    <Text style={styles.nutritionText}>
-                      <Text style={{ fontWeight: "bold" }}>Serving Size:</Text>
-                    </Text>
-                    <TextInput
-                      style={styles.input}
-                      value={String(servings[index] ?? "")}
-                      onChangeText={(val) => updateServing(index, val)}
-                      keyboardType="numeric"
-                    />
-                    <Text style={styles.nutritionText}>g</Text>
+              {/* Nutrition Totals */}
+              <View style={styles.section}>
+                <Text style={styles.title}>Nutritional Analysis</Text>
+                <View style={styles.totalBoxContainer}>
+                  <View style={styles.totalBox}>
+                    <Text style={styles.totalLabel}>Total Calories</Text>
+                    <Text style={styles.totalValue}>{totals.calories.toFixed(1)} kcal</Text>
                   </View>
-
-                  <View style={{ marginTop: 6 }}>
-                    <Text style={styles.nutritionText}>Calories: {adjusted.calories} kcal</Text>
-                    <Text style={styles.nutritionText}>Protein: {adjusted.protein} g</Text>
-                    <Text style={styles.nutritionText}>Carbs: {adjusted.carbs} g</Text>
-                    <Text style={styles.nutritionText}>Fat: {adjusted.fat} g</Text>
+                  <View style={styles.totalBox}>
+                    <Text style={styles.totalLabel}>Total Protein</Text>
+                    <Text style={styles.totalValue}>{totals.protein.toFixed(1)} g</Text>
+                  </View>
+                  <View style={styles.totalBox}>
+                    <Text style={styles.totalLabel}>Total Carbs</Text>
+                    <Text style={styles.totalValue}>{totals.carbs.toFixed(1)} g</Text>
+                  </View>
+                  <View style={styles.totalBox}>
+                    <Text style={styles.totalLabel}>Total Fat</Text>
+                    <Text style={styles.totalValue}>{totals.fat.toFixed(1)} g</Text>
                   </View>
                 </View>
-              );
-            })}
 
-            {/* Save Meal Button */}
-            <TouchableOpacity
-              style={{
-                backgroundColor: "green",
-                padding: 12,
-                borderRadius: 8,
-                marginTop: 20,
-                alignItems: "center",
-              }}
-              onPress={saveMealAndFoods}
-            >
-              <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
-                Save Meal
+                {/* Predictions List */}
+                {predictions.map((item, index) => {
+                  const baseServing = Number(item?.nutrition?.serving_weight_grams) || 0;
+                  const serving = Number(servings[index]) || 0;
+                  const factor = baseServing === 0 ? 0 : serving / baseServing;
+
+                  const adjusted = {
+                    calories: ((Number(item?.nutrition?.calories) || 0) * factor).toFixed(1),
+                    protein: ((Number(item?.nutrition?.protein) || 0) * factor).toFixed(1),
+                    carbs: ((Number(item?.nutrition?.carbs) || 0) * factor).toFixed(1),
+                    fat: ((Number(item?.nutrition?.fat) || 0) * factor).toFixed(1),
+                  };
+
+                  return (
+                    <View key={index} style={styles.predItem}>
+                      <Text style={styles.predText}>{item.label}</Text>
+
+                      <View style={styles.servingRow}>
+                        <Text style={styles.nutritionText}>
+                          <Text style={{ fontWeight: "bold" }}>Serving Size:</Text>
+                        </Text>
+                        <TextInput
+                          style={styles.input}
+                          value={String(servings[index] ?? "")}
+                          onChangeText={(val) => updateServing(index, val)}
+                          keyboardType="numeric"
+                        />
+                        <Text style={styles.nutritionText}>g</Text>
+                      </View>
+
+                      <View style={{ marginTop: 6 }}>
+                        <Text style={styles.nutritionText}>Calories: {adjusted.calories} kcal</Text>
+                        <Text style={styles.nutritionText}>Protein: {adjusted.protein} g</Text>
+                        <Text style={styles.nutritionText}>Carbs: {adjusted.carbs} g</Text>
+                        <Text style={styles.nutritionText}>Fat: {adjusted.fat} g</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+
+                {/* Save Meal Button */}
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "green",
+                    borderRadius: 8,
+                    marginTop: 20,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 50,
+                    width: "50%",
+                    alignSelf: "center",
+                  }}
+                  onPress={saveMealAndFoods}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                      Save Meal
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <View style={{ padding: 20, alignItems: "center" }}>
+              <Text style={{ fontSize: 16, color: "#555", textAlign: "center" }}>
+                No food detected. Please try capturing the image again.
               </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
