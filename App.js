@@ -18,7 +18,7 @@ export default function App() {
           <Stack.Navigator
             initialRouteName="Login"
             screenOptions={{
-              headerShown: false, // hide header for all screens
+              headerShown: false,
             }}
           >
             <Stack.Screen

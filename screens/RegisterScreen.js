@@ -32,7 +32,7 @@ const Register = ({ navigation }) => {
       return;
     }
 
-    const emailRegex = /\S+@\S+\.\S+/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       Alert.alert("Invalid Email", "Please enter a valid email address");
       return;
