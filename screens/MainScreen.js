@@ -101,7 +101,7 @@ export default function Main() {
             tabBarIcon: ({ color }) => <MaterialIcons name="settings" size={28} color={color} />,
           }}
         >
-          {() => <SettingNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+          {() => <SettingNav/>}
         </Tab.Screen>
       </Tab.Navigator>
     </SafeAreaView>

@@ -9,13 +9,10 @@ export default function SettingNav() {
 
   const handleLogout = async () => {
     try {
-      // 1️⃣ Remove both user data and profile flag
       await AsyncStorage.multiRemove(["userId", "hasProfile"]);
 
-      // 2️⃣ Clear userId in context
       setUserId(null);
 
-      // 3️⃣ Navigate back to Login screen (reset navigation stack)
       navigation.reset({
         index: 0,
         routes: [{ name: "Login" }],
