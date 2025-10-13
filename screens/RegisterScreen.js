@@ -74,6 +74,7 @@ const Register = ({ navigation }) => {
 
         <TextInput
           style={styles.input}
+          placeholderTextColor="#888"
           placeholder="Username"
           value={username}
           onChangeText={setUsername}
@@ -83,6 +84,7 @@ const Register = ({ navigation }) => {
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor="#888"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -94,6 +96,7 @@ const Register = ({ navigation }) => {
           <TextInput
             style={{ flex: 1 }}
             placeholder="Password"
+            placeholderTextColor="#888"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -112,6 +115,7 @@ const Register = ({ navigation }) => {
           <TextInput
             style={{ flex: 1 }}
             placeholder="Confirm Password"
+            placeholderTextColor="#888"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirm}
