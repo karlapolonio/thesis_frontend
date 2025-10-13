@@ -15,6 +15,7 @@ import styles from "../styles/LoginStyle";
 import axios from "axios";
 import { useUser } from "../UserContext";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Login = ({ navigation }) => {
   const { setUserId, BACKEND_URL, API_KEY } = useUser();

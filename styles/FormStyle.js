@@ -138,6 +138,8 @@ export default StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 7,
     alignItems: 'center',
+    alignSelf: 'center',
+    width: '40%',
   },
   submitButtonText: {
     color: '#fff',
