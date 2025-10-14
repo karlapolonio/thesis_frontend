@@ -5,6 +5,13 @@ export default {
     name: "thesis_frontend",
     slug: "thesis_frontend",
     version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    splash: {
+      image: "./assets/splash-icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
     extra: {
       API_KEY: process.env.API_KEY,
       BACKEND_URL: process.env.BACKEND_URL,
@@ -17,6 +24,17 @@ export default {
     },
     runtimeVersion: {
       policy: "appVersion"
-    }
+    },
+    ios: { supportsTablet: true },
+    android: {
+      package: "com.thesisnine.thesisfrontend",
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      },
+      edgeToEdgeEnabled: true
+    },
+    web: { favicon: "./assets/favicon.png" },
+    userInterfaceStyle: "light",
   }
 };

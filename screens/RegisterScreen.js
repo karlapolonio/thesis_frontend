@@ -98,7 +98,7 @@ const Register = ({ navigation }) => {
 
         <View style={[styles.input, { flexDirection: "row", alignItems: "center" }]}>
           <TextInput
-            style={{ flex: 1 }}
+            style={{ flex: 1, color: "black"}}
             placeholder="Password"
             placeholderTextColor="#888"
             value={password}
@@ -117,7 +117,7 @@ const Register = ({ navigation }) => {
 
         <View style={[styles.input, { flexDirection: "row", alignItems: "center" }]}>
           <TextInput
-            style={{ flex: 1 }}
+            style={{ flex: 1, color: "black" }}
             placeholder="Confirm Password"
             placeholderTextColor="#888"
             value={confirmPassword}

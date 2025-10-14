@@ -10,13 +10,13 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import CalendarStrip from 'react-native-calendar-strip';
+import moment from 'moment';
 import { useState, useEffect } from 'react';
 import { useUser } from '../UserContext';
 
 const getLocalDateString = (date = new Date()) => {
   const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  console.log(localTime);
   return localTime.toISOString().split('T')[0];
 };
 
@@ -46,7 +46,6 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
       }
 
       const data = await res.json();
-
       if (!Array.isArray(data) || data.length === 0) {
         setGroupedMeals({});
         return;
@@ -78,7 +77,6 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
       );
 
       if (!res.ok) {
-        console.error("Server error fetching food logs:", res.status, res.statusText);
         setFoodLogs([]);
         setSelectedMeal(meal);
         setModalVisible(true);
@@ -139,8 +137,6 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
     return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
 
-
-
   const getNumberedMeals = () => {
     let counter = 1;
     const numbered = {};
@@ -156,7 +152,6 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
   };
 
   const numberedMeals = getNumberedMeals();
-
   const todayStr = getLocalDateString();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -175,50 +170,24 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
   return (
     <ScrollView style={{ flex: 1, padding: 10, backgroundColor: '#ffffff' }}>
       <Text style={styles.calendarTitle}>Log</Text>
-      <Calendar
-        current={selectedDate}
-        style={{ backgroundColor: '#6cd171ff', borderRadius: 20 }}
-        onDayPress={(day) => {
-          if (day.dateString > todayStr) {
-            Alert.alert("Invalid Date", "You cannot select a future date.");
+
+      <CalendarStrip
+        scrollable
+        style={{ height: 120, paddingTop: 10, paddingBottom: 10 }}
+        calendarColor="#6cd171ff"
+        calendarHeaderStyle={{ color: '#2e7d32', fontSize: 16 }}
+        dateNumberStyle={{ color: '#2e7d32', fontSize: 14 }}
+        dateNameStyle={{ color: '#2e7d32', fontSize: 12 }}
+        highlightDateNumberStyle={{ color: '#ffffff' }}
+        highlightDateNameStyle={{ color: '#ffffff' }}
+        selectedDate={moment(selectedDate)}
+        onDateSelected={(date) => {
+          const dateStr = date.format('YYYY-MM-DD');
+          if (dateStr > todayStr) {
+            Alert.alert('Invalid Date', 'You cannot select a future date.');
             return;
           }
-          setSelectedDate(day.dateString);
-        }}
-        theme={{
-          textSectionTitleColor: '#2e7d32',
-          arrowColor: '#27ae60',
-          monthTextColor: '#2e7d32',
-          todayTextColor: '#27ae60',
-        }}
-        dayComponent={({ date, state }) => {
-          const isSelected = date.dateString === selectedDate;
-          const bgColor = isSelected ? '#27ae60' : 'transparent';
-          const isFuture = date.dateString > todayStr;
-          const textColor = isFuture
-            ? '#bdbdbd'
-            : isSelected
-            ? '#ffffff'
-            : '#2e7d32';
-          const fontWeight = date.dateString === todayStr ? 'bold' : '400';
-          return (
-            <TouchableOpacity
-              disabled={isFuture}
-              style={{
-                backgroundColor: bgColor,
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginVertical: 2,
-                opacity: isFuture ? 0.4 : 1,
-              }}
-              onPress={() => setSelectedDate(date.dateString)}
-            >
-              <Text style={{ color: textColor, fontWeight }}>{date.day}</Text>
-            </TouchableOpacity>
-          );
+          setSelectedDate(dateStr);
         }}
       />
 
