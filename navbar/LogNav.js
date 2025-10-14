@@ -168,34 +168,51 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
   };
 
   return (
-    <ScrollView style={{ flex: 1, padding: 10, backgroundColor: '#ffffff' }}>
-      <Text style={styles.calendarTitle}>Log</Text>
+    <ScrollView
+      style={{ flex: 1, padding: 15, backgroundColor: '#ffffffff' }}
+      contentContainerStyle={{ paddingBottom: 30 }}
+    >
+      <Text style={styles.calendarTitle}>{moment(selectedDate).format('MMMM YYYY')}</Text>
 
       <CalendarStrip
         scrollable
-        style={{ height: 120, paddingTop: 10, paddingBottom: 10 }}
-        calendarColor="#6cd171ff"
-        calendarHeaderStyle={{ color: '#2e7d32', fontSize: 16 }}
-        dateNumberStyle={{ color: '#2e7d32', fontSize: 14 }}
-        dateNameStyle={{ color: '#2e7d32', fontSize: 12 }}
-        highlightDateNumberStyle={{ color: '#ffffff' }}
-        highlightDateNameStyle={{ color: '#ffffff' }}
+        style={{
+          height: 100,
+          paddingTop: 10,
+          paddingBottom: 10,
+          backgroundColor: '#27ae60',
+          borderRadius: 12,
+          marginBottom: 20,
+        }}
+        calendarColor="#27ae60"
+        calendarHeaderStyle={{ color: '#ffffff', fontSize: 18, fontWeight: '600' }}
+        dateNumberStyle={{ color: '#d4f1d4', fontSize: 16 }}
+        dateNameStyle={{ color: '#d4f1d4', fontSize: 12 }}
         selectedDate={moment(selectedDate)}
+        showMonth={false}
+        iconContainer={{ flex: 0.1 }}
+        highlightDateNumberStyle={{ color: '#ffffff', fontSize: 18, fontWeight: 'bold' }}
+        highlightDateNameStyle={{ color: '#ffffff', fontSize: 12, fontWeight: '600' }}
+        customDatesStyles={[
+          {
+            startDate: moment(selectedDate),
+            dateNameStyle: { color: '#ffffff', fontWeight: 'bold', fontSize: 12 },
+            dateNumberStyle: { color: '#ffffff', fontWeight: 'bold', fontSize: 18 },
+            containerStyle: { backgroundColor: '#145a32', borderRadius: 20 },
+          },
+        ]}
         onDateSelected={(date) => {
-          const dateStr = date.format('YYYY-MM-DD');
-          if (dateStr > todayStr) {
-            Alert.alert('Invalid Date', 'You cannot select a future date.');
-            return;
-          }
-          setSelectedDate(dateStr);
+          setSelectedDate(date.format('YYYY-MM-DD'));
         }}
       />
 
-      <Text style={styles.title}>{formatDateTitle(selectedDate)}</Text>
+      {/* Selected Day Title */}
+      <Text style={styles.select}>{formatDateTitle(selectedDate)}</Text>
 
+      {/* Meals List */}
       {loadingMeals ? (
         <View style={{ marginTop: 30, alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#27ae60" />
+          <ActivityIndicator size="large" color="#1e7d32" />
         </View>
       ) : Object.keys(numberedMeals).length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -262,7 +279,7 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
             </Pressable>
 
             <Pressable
-              style={[styles.closeButton, { backgroundColor: 'red', marginTop: 10 }]}
+              style={[styles.closeButton, { backgroundColor: '#c0392b', marginTop: 10 }]}
               onPress={() => deleteMeal(selectedMeal.id)}
             >
               <Text style={styles.closeText}>Delete Meal</Text>
@@ -270,39 +287,41 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+</ScrollView>
+
   );
 }
 
 const styles = StyleSheet.create({
-  calendarTitle: { fontSize: 22, fontWeight: 'bold', color: '#2e7d32', marginLeft: 10, marginTop:25, marginBottom: 15 },
-  title: { fontSize: 18, fontWeight: 'bold', marginVertical: 10 },
-  timeHeader: { fontSize: 16, fontWeight: 'bold', marginVertical: 5 },
+  calendarTitle: { fontSize: 24, fontWeight: 'bold', color: '#1e7d32', marginBottom: 10, textAlign: 'center' },
+  title: { fontSize: 18, fontWeight: 'bold', marginVertical: 10, color: '#145a32', textAlign: 'center' },
+  timeHeader: { fontSize: 16, fontWeight: 'bold', marginVertical: 5, color: '#1e7d32' },
   mealCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 15,
     marginVertical: 5,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
   mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  mealName: { fontSize: 16, fontWeight: 'bold', color: '#2e7d32' },
+  mealName: { fontSize: 16, fontWeight: 'bold', color: '#145a32' },
   mealCalories: { fontSize: 16, fontWeight: 'bold', color: '#27ae60' },
   macrosRow: { flexDirection: 'row', marginTop: 5, justifyContent: 'space-between' },
   macroBadge: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    backgroundColor: '#d4f1d4',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
     fontSize: 12,
-    color: '#2e7d32',
+    color: '#145a32',
+    fontWeight: '600',
   },
   emptyContainer: { padding: 20, alignItems: 'center', marginVertical: 20 },
-  emptyText: { color: '#2e7d32', fontStyle: 'italic' },
+  emptyText: { color: '#145a32', fontStyle: 'italic' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -312,20 +331,27 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '90%',
     maxHeight: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: '#eafaf1',
+    borderRadius: 12,
     padding: 20,
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#1e7d32', textAlign: 'center' },
   closeButton: {
     marginTop: 15,
-    padding: 10,
-    backgroundColor: 'green',
-    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#27ae60',
+    borderRadius: 10,
     alignItems: 'center',
   },
   closeText: { color: '#fff', fontWeight: 'bold' },
-  foodItem: { paddingVertical: 6, borderBottomWidth: 1, borderColor: '#eee' },
-  foodName: { fontWeight: 'bold', fontSize: 14, color: '#2e7d32' },
-  foodMacros: { fontSize: 12, color: '#555', marginTop: 2 },
+  foodItem: { paddingVertical: 8, borderBottomWidth: 1, borderColor: '#d4f1d4' },
+  foodName: { fontWeight: 'bold', fontSize: 14, color: '#145a32' },
+  foodMacros: { fontSize: 12, color: '#145a32', marginTop: 2 },
+  select: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#145a32', 
+    textAlign: 'center', 
+    marginVertical: 10,
+  },
 });
