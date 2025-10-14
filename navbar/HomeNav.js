@@ -14,7 +14,6 @@ import {
 import { LineChart } from "react-native-chart-kit";
 import { useUser } from "../UserContext";
 
-// 🎨 Your chosen palette
 const PALETTE = {
   darkGreen: "#4C763B",
   mediumGreen: "#009c31ff",
@@ -213,17 +212,18 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
             backgroundGradientFrom: "#fff",
             backgroundGradientTo: "#fff",
             color: () => COLORS[selectedNutrient],
-            labelColor: () => "#333",
+            labelColor: () => "#000000ff",
             decimalPlaces: 2,
             propsForBackgroundLines: {
               stroke: "#ccc",
               strokeWidth: 1,
             },
             propsForDots: {
-              r: "4",
-              strokeWidth: "2",
+              r: "5",
+              strokeWidth: "1",
               stroke: COLORS[selectedNutrient],
             },
+
           }}
           style={styles.chart}
           bezier
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   },
 
   dropdownText: {
-    color: PALETTE.mediumGreen,
+    color: PALETTE.darkGreen,
     fontSize: 14,
     fontWeight: "500",
   },
