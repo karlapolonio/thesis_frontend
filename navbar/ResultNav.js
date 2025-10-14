@@ -87,7 +87,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
 
   const saveMealAndFoods = async () => {
     try {
-      setSaving(true); // start spinner
+      setSaving(true);
       const now = new Date();
       const localISOTime = new Date(
         now.getTime() - now.getTimezoneOffset() * 60000
@@ -129,7 +129,6 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
         headers: { "x-api-key": API_KEY },
       });
 
-      // Show spinner for 1 second before stopping
       setTimeout(() => {
         setSaving(false);
         Alert.alert("Success", "Meal and food logs saved successfully!");
@@ -149,11 +148,39 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
 
   if (!photoUri) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Please capture an image first.</Text>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#fff", // white background
+          padding: 20,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "bold",
+            color: "#145a32", // dark green
+            textAlign: "center",
+            marginBottom: 10,
+          }}
+        >
+          Please capture an image first.
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#1a2a20ff", // lighter green
+            textAlign: "center",
+          }}
+        >
+          Make sure your image clearly shows the food for accurate analysis.
+        </Text>
       </View>
     );
   }
+
 
   if (loading) {
     return (

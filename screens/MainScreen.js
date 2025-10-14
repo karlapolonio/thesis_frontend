@@ -78,7 +78,7 @@ export default function Main() {
       </Tab.Screen>
 
       <Tab.Screen
-        name="Result"
+        name="Food Result"
         options={{
           tabBarIcon: ({ color }) => <MaterialIcons name="restaurant" size={28} color={color} />,
         }}
