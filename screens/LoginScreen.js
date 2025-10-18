@@ -33,7 +33,8 @@ const Login = ({ navigation }) => {
         { headers: { "x-api-key": API_KEY } }
       );
 
-      const { user_id, has_profile } = response.data;
+      const { has_profile, user } = response.data;
+      const user_id = user.id;
 
       setUserId(user_id);
       await AsyncStorage.setItem('userId', user_id.toString());

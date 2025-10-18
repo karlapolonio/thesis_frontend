@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "thesis_frontend",
+    name: "NutriApp",
     slug: "thesis_frontend",
     version: "1.0.0",
     orientation: "portrait",

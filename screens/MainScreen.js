@@ -69,7 +69,7 @@ export default function Main() {
 
             const result = await ImagePicker.launchCameraAsync({ quality: 1 });
             if (!result.canceled) {
-              navigation.navigate('Result', { photoUri: result.assets[0].uri });
+              navigation.navigate('Food Result', { photoUri: result.assets[0].uri });
             }
           },
         })}

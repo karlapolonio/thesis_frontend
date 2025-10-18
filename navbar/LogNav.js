@@ -184,7 +184,7 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
           borderRadius: 12,
           marginBottom: 20,
         }}
-        calendarColor="#27ae60"
+        calendarColor="#63b686ff"
         calendarHeaderStyle={{ color: '#ffffff', fontSize: 18, fontWeight: '600' }}
         dateNumberStyle={{ color: '#d4f1d4', fontSize: 16 }}
         dateNameStyle={{ color: '#d4f1d4', fontSize: 12 }}
