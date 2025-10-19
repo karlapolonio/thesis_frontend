@@ -15,17 +15,18 @@ import { LineChart } from "react-native-chart-kit";
 import { useUser } from "../UserContext";
 
 const PALETTE = {
-  darkGreen: "#4C763B",
-  mediumGreen: "#009c31ff",
-  lightGreen: "#B0CE88",
+  darkGreen: "#1B5E20",
+  mediumGreen: "#2E7D32",
+  lightGreen: "#81C784",
+  limeGreen: "#A5D6A7",
   yellow: "#d9d768ff",
 };
 
 const GOALS = { calories: 1000, protein: 1000, carbs: 1000, fat: 1000 };
 const NUTRIENTS = ["calories", "protein", "carbs", "fat"];
 const COLORS = {
-  calories: PALETTE.darkGreen,
-  protein: PALETTE.mediumGreen,
+  calories: PALETTE.mediumGreen,
+  protein: PALETTE.limeGreen,
   carbs: PALETTE.lightGreen,
   fat: PALETTE.yellow,
 };
@@ -38,11 +39,11 @@ const formatDate = (date) => {
 
 export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
   const { mealRefreshCounter } = useUser();
-  const screenWidth = Dimensions.get("window").width - 20;
 
   const [todayTotals, setTodayTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [weeklyData, setWeeklyData] = useState([]);
   const [selectedNutrient, setSelectedNutrient] = useState("calories");
+  const unit = selectedNutrient === "calories" ? "kcal" : "g";
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [animatedValues] = useState({
@@ -147,13 +148,6 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
     </View>
   );
 
-  const formatYAxis = (y) => {
-    const num = parseFloat(y);
-    if (isNaN(num)) return "0";
-    if (num < 1 && num > 0) return num.toFixed(2);
-    return Math.round(num).toString();
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={[styles.title, { color: PALETTE.darkGreen }]}>Daily Summary</Text>
@@ -163,7 +157,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
       {renderBar("Fat", todayTotals.fat, GOALS.fat, animatedValues.fat, COLORS.fat)}
 
       <View style={styles.header}>
-        <Text style={[styles.title, { color: PALETTE.darkGreen }]}>Weekly Nutrition Overview</Text>
+        <Text style={[styles.title, { color: PALETTE.darkGreen }]}>Last 7 Days Nutrition</Text>
 
         <TouchableOpacity style={styles.dropdownBox} onPress={() => setModalVisible(true)}>
           <Text style={styles.dropdownText}>
@@ -171,7 +165,6 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
           </Text>
         </TouchableOpacity>
       </View>
-
 
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -201,32 +194,44 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
         <LineChart
           data={{
             labels: weeklyData.map((d) => d.date),
-            datasets: [{ data: weeklyData.map((d) => d[selectedNutrient]) }],
+            datasets: [
+              {
+                data: weeklyData.map((d) => d[selectedNutrient]),
+                color: (opacity = 1) => `rgba(67, 160, 71, ${opacity})`,
+                strokeWidth: 2,
+              },
+            ],
           }}
-          width={screenWidth}
+          width={Dimensions.get("window").width}
           height={280}
-          fromZero={true}
-          formatYLabel={formatYAxis}
-          verticalLabelRotation={45}
+          yAxisLabel=""
+          yAxisSuffix={`${unit}`}
+          yAxisInterval={1}
+          verticalLabelRotation={30}
           chartConfig={{
-            backgroundGradientFrom: "#fff",
-            backgroundGradientTo: "#fff",
-            color: () => COLORS[selectedNutrient],
-            labelColor: () => "#000000ff",
-            decimalPlaces: 2,
-            propsForBackgroundLines: {
-              stroke: "#ccc",
-              strokeWidth: 1,
-            },
+            backgroundColor: PALETTE.darkGreen,
+            backgroundGradientFrom: PALETTE.mediumGreen,
+            backgroundGradientTo: PALETTE.lightGreen,
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
             propsForDots: {
               r: "5",
-              strokeWidth: "1",
-              stroke: COLORS[selectedNutrient],
+              strokeWidth: "2",
+              stroke: PALETTE.limeGreen,
+              fill: COLORS[selectedNutrient],
             },
-
+            propsForBackgroundLines: {
+              stroke: PALETTE.mediumGreen,
+              strokeDasharray: "",
+            },
           }}
-          style={styles.chart}
           bezier
+          style={{
+            marginLeft: -15,
+            marginRight: 5,
+            borderRadius: 16,
+          }}
           onDataPointClick={({ value, index }) => {
             Alert.alert(
               selectedNutrient.charAt(0).toUpperCase() + selectedNutrient.slice(1),
@@ -260,10 +265,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 25,
-    marginBottom: 10,
     paddingHorizontal: 5,
   },
-
   dropdownBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -273,10 +276,9 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 3, 
+    paddingVertical: 3,
     marginTop: -15,
   },
-
   dropdownText: {
     color: PALETTE.darkGreen,
     fontSize: 14,
