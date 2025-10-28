@@ -3,7 +3,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   Modal,
   Pressable,
   ScrollView,
@@ -14,6 +13,7 @@ import CalendarStrip from 'react-native-calendar-strip';
 import moment from 'moment';
 import { useState, useEffect } from 'react';
 import { useUser } from '../UserContext';
+import styles from "../styles/LogNavStyle";
 
 const getLocalDateString = (date = new Date()) => {
   const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -291,67 +291,3 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
 
   );
 }
-
-const styles = StyleSheet.create({
-  calendarTitle: { fontSize: 24, fontWeight: 'bold', color: '#1e7d32', marginBottom: 10, textAlign: 'center' },
-  title: { fontSize: 18, fontWeight: 'bold', marginVertical: 10, color: '#145a32', textAlign: 'center' },
-  timeHeader: { fontSize: 16, fontWeight: 'bold', marginVertical: 5, color: '#1e7d32' },
-  mealCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 15,
-    marginVertical: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  mealName: { fontSize: 16, fontWeight: 'bold', color: '#145a32' },
-  mealCalories: { fontSize: 16, fontWeight: 'bold', color: '#27ae60' },
-  macrosRow: { flexDirection: 'row', marginTop: 5, justifyContent: 'space-between' },
-  macroBadge: {
-    backgroundColor: '#d4f1d4',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    fontSize: 12,
-    color: '#145a32',
-    fontWeight: '600',
-  },
-  emptyContainer: { padding: 20, alignItems: 'center', marginVertical: 20 },
-  emptyText: { color: '#145a32', fontStyle: 'italic' },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '90%',
-    maxHeight: '80%',
-    backgroundColor: '#eafaf1',
-    borderRadius: 12,
-    padding: 20,
-  },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#1e7d32', textAlign: 'center' },
-  closeButton: {
-    marginTop: 15,
-    padding: 12,
-    backgroundColor: '#27ae60',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  closeText: { color: '#fff', fontWeight: 'bold' },
-  foodItem: { paddingVertical: 8, borderBottomWidth: 1, borderColor: '#d4f1d4' },
-  foodName: { fontWeight: 'bold', fontSize: 14, color: '#145a32' },
-  foodMacros: { fontSize: 12, color: '#145a32', marginTop: 2 },
-  select: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#145a32', 
-    textAlign: 'center', 
-    marginVertical: 10,
-  },
-});
