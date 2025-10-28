@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Dimensions,
   ActivityIndicator,
@@ -13,14 +12,7 @@ import {
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { useUser } from "../UserContext";
-
-const PALETTE = {
-  darkGreen: "#1B5E20",
-  mediumGreen: "#2E7D32",
-  lightGreen: "#81C784",
-  limeGreen: "#A5D6A7",
-  yellow: "#d9d768ff",
-};
+import styles, { PALETTE } from "../styles/HomeNavStyle";
 
 const GOALS = { calories: 1000, protein: 1000, carbs: 1000, fat: 1000 };
 const NUTRIENTS = ["calories", "protein", "carbs", "fat"];
@@ -43,9 +35,11 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
   const [todayTotals, setTodayTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [weeklyData, setWeeklyData] = useState([]);
   const [selectedNutrient, setSelectedNutrient] = useState("calories");
-  const unit = selectedNutrient === "calories" ? "kcal" : "g";
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const unit = selectedNutrient === "calories" ? "kcal" : "g";
+
   const [animatedValues] = useState({
     calories: new Animated.Value(0),
     protein: new Animated.Value(0),
@@ -55,6 +49,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
 
   const safeNumber = (val) => (isNaN(Number(val)) ? 0 : Number(val));
 
+  // Fetch Today's Meals
   useEffect(() => {
     const fetchToday = async () => {
       try {
@@ -77,8 +72,10 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
           }),
           { calories: 0, protein: 0, carbs: 0, fat: 0 }
         );
+
         setTodayTotals(totals);
 
+        // Animate progress bars
         Object.keys(totals).forEach((key) =>
           Animated.timing(animatedValues[key], {
             toValue: Math.min((totals[key] / GOALS[key]) * 100, 100),
@@ -90,9 +87,11 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
         console.error(err);
       }
     };
+
     fetchToday();
   }, [mealRefreshCounter, userId]);
 
+  // Fetch Weekly Data (Dynamic)
   useEffect(() => {
     const fetchWeekly = async () => {
       setLoading(true);
@@ -126,9 +125,11 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
         setLoading(false);
       }
     };
+
     fetchWeekly();
   }, [mealRefreshCounter, userId]);
 
+  // Progress bar renderer
   const renderBar = (label, value, goal, anim, color) => (
     <View style={{ marginBottom: 10 }}>
       <Text style={styles.label}>
@@ -150,15 +151,16 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* --- Daily Summary --- */}
       <Text style={[styles.title, { color: PALETTE.darkGreen }]}>Daily Summary</Text>
       {renderBar("Calories", todayTotals.calories, GOALS.calories, animatedValues.calories, COLORS.calories)}
       {renderBar("Protein", todayTotals.protein, GOALS.protein, animatedValues.protein, COLORS.protein)}
       {renderBar("Carbs", todayTotals.carbs, GOALS.carbs, animatedValues.carbs, COLORS.carbs)}
       {renderBar("Fat", todayTotals.fat, GOALS.fat, animatedValues.fat, COLORS.fat)}
 
+      {/* --- Weekly Chart Header --- */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: PALETTE.darkGreen }]}>Last 7 Days Nutrition</Text>
-
         <TouchableOpacity style={styles.dropdownBox} onPress={() => setModalVisible(true)}>
           <Text style={styles.dropdownText}>
             {selectedNutrient.charAt(0).toUpperCase() + selectedNutrient.slice(1)} ▼
@@ -166,6 +168,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
         </TouchableOpacity>
       </View>
 
+      {/* --- Nutrient Selector Modal --- */}
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
@@ -188,127 +191,68 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
         </View>
       </Modal>
 
+      {/* --- Weekly Chart --- */}
       {loading ? (
         <ActivityIndicator size="large" color={PALETTE.mediumGreen} style={{ marginTop: 30 }} />
       ) : weeklyData.length > 0 ? (
-        <LineChart
-          data={{
-            labels: weeklyData.map((d) => d.date),
-            datasets: [
-              {
-                data: weeklyData.map((d) => d[selectedNutrient]),
-                color: (opacity = 1) => `rgba(67, 160, 71, ${opacity})`,
-                strokeWidth: 2,
-              },
-            ],
-          }}
-          width={Dimensions.get("window").width}
-          height={280}
-          yAxisLabel=""
-          yAxisSuffix={`${unit}`}
-          yAxisInterval={1}
-          verticalLabelRotation={30}
-          chartConfig={{
-            backgroundColor: PALETTE.darkGreen,
-            backgroundGradientFrom: PALETTE.mediumGreen,
-            backgroundGradientTo: PALETTE.lightGreen,
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            propsForDots: {
-              r: "5",
-              strokeWidth: "2",
-              stroke: PALETTE.limeGreen,
-              fill: COLORS[selectedNutrient],
-            },
-            propsForBackgroundLines: {
-              stroke: PALETTE.mediumGreen,
-              strokeDasharray: "",
-            },
-          }}
-          bezier
+        <View
           style={{
-            marginLeft: -15,
-            marginRight: 5,
-            borderRadius: 16,
+            backgroundColor: "#F9FFF9",
+            borderRadius: 20,
+            paddingVertical: 10,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            marginTop: 10,
           }}
-          onDataPointClick={({ value, index }) => {
-            Alert.alert(
-              selectedNutrient.charAt(0).toUpperCase() + selectedNutrient.slice(1),
-              `${weeklyData[index].date}: ${value}`
-            );
-          }}
-        />
+        >
+          <LineChart
+            data={{
+              labels: weeklyData.map((d) => d.date),
+              datasets: [
+                {
+                  data: weeklyData.map((d) => d[selectedNutrient]),
+                  color: (opacity = 1) => `rgba(46, 125, 50, ${opacity})`, // smooth green
+                  strokeWidth: 3,
+                },
+              ],
+            }}
+            width={Dimensions.get("window").width - 20}
+            height={260}
+            yAxisSuffix={` ${unit}`}
+            verticalLabelRotation={20}
+            chartConfig={{
+              backgroundGradientFrom: "#C8E6C9",
+              backgroundGradientTo: "#E8F5E9",
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(27, 94, 32, ${opacity})`,
+              labelColor: () => "#666",
+              propsForDots: {
+                r: "6",
+                strokeWidth: "2",
+                stroke: "#fff",
+                fill: COLORS[selectedNutrient],
+              },
+              propsForBackgroundLines: {
+                stroke: "#E0E0E0",
+              },
+            }}
+            bezier
+            style={{
+              marginHorizontal: 10,
+              borderRadius: 16,
+            }}
+            onDataPointClick={({ value, index }) => {
+              Alert.alert(
+                selectedNutrient.charAt(0).toUpperCase() + selectedNutrient.slice(1),
+                `${weeklyData[index].date}: ${value}${unit}`
+              );
+            }}
+          />
+        </View>
       ) : (
         <Text style={styles.noData}>No data available</Text>
       )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: "#fff", padding: 16 },
-  title: { fontSize: 18, fontWeight: "600", marginBottom: 20 },
-  label: { fontSize: 14, color: "#333", marginBottom: 4 },
-  barBackground: {
-    height: 16,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: 8,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 25,
-    paddingHorizontal: 5,
-  },
-  dropdownBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginTop: -15,
-  },
-  dropdownText: {
-    color: PALETTE.darkGreen,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modal: {
-    width: "75%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingVertical: 10,
-  },
-  modalItem: {
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  chart: {
-    marginVertical: 15,
-    borderRadius: 10,
-    marginLeft: -20,
-    marginRight: 10,
-  },
-  noData: {
-    marginTop: 30,
-    textAlign: "center",
-    color: "#777",
-  },
-});
