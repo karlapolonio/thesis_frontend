@@ -14,7 +14,11 @@ import { LineChart } from "react-native-chart-kit";
 import { useUser } from "../UserContext";
 import styles, { PALETTE } from "../styles/HomeNavStyle";
 
-const GOALS = { calories: 1000, protein: 1000, carbs: 1000, fat: 1000 };
+////////////////////////////////////////////
+// To be change after getting the formula //
+////////////////////////////////////////////
+
+const GOALS = { calories: 0, protein: 0, carbs: 0, fat: 0};
 const NUTRIENTS = ["calories", "protein", "carbs", "fat"];
 const COLORS = {
   calories: PALETTE.mediumGreen,
@@ -24,9 +28,9 @@ const COLORS = {
 };
 
 const formatDate = (date) => {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${months[date.getMonth()]} ${date.getDate()}`;
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month}-${day}`;
 };
 
 export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
@@ -49,7 +53,10 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
 
   const safeNumber = (val) => (isNaN(Number(val)) ? 0 : Number(val));
 
-  // Fetch Today's Meals
+  /////////////////////////
+  // Fetch Today's Meals //
+  /////////////////////////
+
   useEffect(() => {
     const fetchToday = async () => {
       try {
@@ -75,7 +82,6 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
 
         setTodayTotals(totals);
 
-        // Animate progress bars
         Object.keys(totals).forEach((key) =>
           Animated.timing(animatedValues[key], {
             toValue: Math.min((totals[key] / GOALS[key]) * 100, 100),
@@ -91,7 +97,10 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
     fetchToday();
   }, [mealRefreshCounter, userId]);
 
-  // Fetch Weekly Data (Dynamic)
+  //////////////////////////////////////
+  // Fetch Last 7 Days Nutrition Data //
+  //////////////////////////////////////
+
   useEffect(() => {
     const fetchWeekly = async () => {
       setLoading(true);
@@ -129,7 +138,6 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
     fetchWeekly();
   }, [mealRefreshCounter, userId]);
 
-  // Progress bar renderer
   const renderBar = (label, value, goal, anim, color) => (
     <View style={{ marginBottom: 10 }}>
       <Text style={styles.label}>
@@ -195,42 +203,28 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
       {loading ? (
         <ActivityIndicator size="large" color={PALETTE.mediumGreen} style={{ marginTop: 30 }} />
       ) : weeklyData.length > 0 ? (
-        <View
-          style={{
-            backgroundColor: "#F9FFF9",
-            borderRadius: 20,
-            paddingVertical: 10,
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            marginTop: 10,
-          }}
-        >
+        <View>
           <LineChart
             data={{
               labels: weeklyData.map((d) => d.date),
               datasets: [
                 {
-                  data: weeklyData.map((d) => d[selectedNutrient]),
-                  color: (opacity = 1) => `rgba(46, 125, 50, ${opacity})`, // smooth green
-                  strokeWidth: 3,
+                  data: weeklyData.map((d) => d[selectedNutrient]
+                  ),
                 },
               ],
             }}
             width={Dimensions.get("window").width - 20}
-            height={260}
-            yAxisSuffix={` ${unit}`}
-            verticalLabelRotation={20}
+            height={300}
+            yAxisSuffix={`${unit}`}
+            verticalLabelRotation={45}
             chartConfig={{
               backgroundGradientFrom: "#C8E6C9",
               backgroundGradientTo: "#E8F5E9",
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(27, 94, 32, ${opacity})`,
-              labelColor: () => "#666",
               propsForDots: {
-                r: "6",
-                strokeWidth: "2",
-                stroke: "#fff",
+                r: "5",
                 fill: COLORS[selectedNutrient],
               },
               propsForBackgroundLines: {
@@ -241,6 +235,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
             style={{
               marginHorizontal: 10,
               borderRadius: 16,
+              marginLeft: -5,
             }}
             onDataPointClick={({ value, index }) => {
               Alert.alert(

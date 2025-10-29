@@ -25,10 +25,10 @@ export default function App() {
               screenOptions={{ headerShown: false }}
             >
               <Stack.Screen name="Startup" component={StartupScreen} />
-              <Stack.Screen name="Login" component={Login} options={{ animation: "fade_from_bottom" }} />
-              <Stack.Screen name="Register" component={Register} options={{ animation: "fade_from_bottom" }} />
-              <Stack.Screen name="Form" component={Form} options={{ animation: "fade_from_bottom" }} />
-              <Stack.Screen name="Main" component={Main} options={{ animation: "fade_from_bottom" }} />
+              <Stack.Screen name="Login" component={Login}/>
+              <Stack.Screen name="Register" component={Register}/>
+              <Stack.Screen name="Form" component={Form}/>
+              <Stack.Screen name="Main" component={Main}/>
             </Stack.Navigator>
           </NavigationContainer>
         </UserProvider>

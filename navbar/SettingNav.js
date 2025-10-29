@@ -27,7 +27,6 @@ export default function SettingNav() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Settings</Text>
 
-      {/* Profile Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Profile</Text>
         <TouchableOpacity style={styles.button} onPress={() => Alert.alert("Edit Profile", "Profile")}>
@@ -35,7 +34,6 @@ export default function SettingNav() {
         </TouchableOpacity>
       </View>
 
-      {/* App Preferences Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferences</Text>
         <TouchableOpacity style={styles.button} onPress={() => Alert.alert("Notifications", "Manage notifications")}>
@@ -46,7 +44,6 @@ export default function SettingNav() {
         </TouchableOpacity>
       </View>
 
-      {/* Account Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

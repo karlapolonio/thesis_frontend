@@ -153,7 +153,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#fff", // white background
+          backgroundColor: "#fff",
           padding: 20,
         }}
       >
@@ -161,7 +161,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
           style={{
             fontSize: 20,
             fontWeight: "bold",
-            color: "#145a32", // dark green
+            color: "#145a32",
             textAlign: "center",
             marginBottom: 10,
           }}
@@ -171,7 +171,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
         <Text
           style={{
             fontSize: 14,
-            color: "#1a2a20ff", // lighter green
+            color: "#1a2a20ff",
             textAlign: "center",
           }}
         >
@@ -184,7 +184,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center",  backgroundColor: "#fff"}}>
         <ActivityIndicator size="large" color="green" />
         <Text style={{ marginTop: 10, color: "green" }}>Processing image</Text>
       </View>
