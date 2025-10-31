@@ -97,9 +97,9 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
     fetchToday();
   }, [mealRefreshCounter, userId]);
 
-  //////////////////////////////////////
-  // Fetch Last 7 Days Nutrition Data //
-  //////////////////////////////////////
+  //////////////////////////////////////////////////////
+  // Fetch Last 6 Days Nutrition Data and Fetch today //
+  //////////////////////////////////////////////////////
 
   useEffect(() => {
     const fetchWeekly = async () => {
@@ -176,7 +176,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
         </TouchableOpacity>
       </View>
 
-      {/* --- Nutrient Selector Modal --- */}
+      {/* --- Nutrients Selector Modal --- */}
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
@@ -199,7 +199,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
         </View>
       </Modal>
 
-      {/* --- Weekly Chart --- */}
+      {/* --- Line Chart --- */}
       {loading ? (
         <ActivityIndicator size="large" color={PALETTE.mediumGreen} style={{ marginTop: 30 }} />
       ) : weeklyData.length > 0 ? (

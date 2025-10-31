@@ -287,7 +287,6 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
           </View>
         </View>
       </Modal>
-</ScrollView>
-
+    </ScrollView>
   );
 }
