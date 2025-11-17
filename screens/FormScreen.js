@@ -1,28 +1,39 @@
-import { Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Alert} from 'react-native';
+import { Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
 import { useState } from 'react';
 import styles from "../styles/FormStyle";
 import { useUser } from "../UserContext";
 import axios from "axios";
+import { calculateBMR, calculateTDEE, adjustCaloriesForGoal, calculateMacros } from '../formula';
 
 export default function Form({ navigation }) {
   const { userId, BACKEND_URL } = useUser();
 
   const [formData, setFormData] = useState({
-    userId: userId,
-    first_field: "",
-    second_field: "",
-    third_field: "",
-    fourth_field: "",
-    fifth_field: "",
+    weight: "",
+    height: "",
+    age: "",
+    sex: "",
+    sports_category: "",
+    goal: ""
   });
 
-  const [showThirdDD, setShowThirdDD] = useState(false);
-  const [showFourthDD, setShowFourthDD] = useState(false);
-  const [showFifthDD, setShowFifthDD] = useState(false);
+  const [showSexDD, setShowSexDD] = useState(false);
+  const [showSCDD, setShowSCDD] = useState(false);
+  const [showGoalDD, setShowGoalDD] = useState(false);
 
-  const thirdFieldList = ["Option A", "Option B", "Option C"];
-  const fourthFieldList = ["Choice 1", "Choice 2", "Choice 3"];
-  const fifthFieldList = ["Yes", "No", "Maybe"];
+  const SexFieldList = ["Male", "Female"];
+  const SportsCategoryFieldList = [
+    { label: "Endurance (Running, Swimming)", value: "endurance" },
+    { label: "Strength/Power (Weightlifting, Sprinting)", value: "strength" },
+    { label: "Team / Intermittent (Basketball, Soccer)", value: "team" },
+    { label: "Skill-Based (Badminton, Table Tennis)", value: "skill" }
+  ];
+
+  const GoalFieldList = [
+    { label: "Maintenance", value: "maintain" },
+    { label: "Weight Loss", value: "weight_loss" },
+    { label: "Muscle Gain", value: "muscle_gain" }
+  ];
 
   const handleSubmit = async () => {
     try {
@@ -31,16 +42,45 @@ export default function Form({ navigation }) {
         return;
       }
 
-      const response = await axios.post(`${BACKEND_URL}/profile/submit/${userId}`, formData);
+      const weight = parseFloat(formData.weight);
+      const height = parseFloat(formData.height);
+      const age = parseInt(formData.age, 10);
+
+      const bmr = calculateBMR(weight, height, age, formData.sex.toLowerCase());
+      const tdee = calculateTDEE(bmr, formData.sports_category);
+      const calories = adjustCaloriesForGoal(tdee, formData.goal);
+      const macros = calculateMacros(weight, calories);
+
+      const payload = {
+        weight,
+        height,
+        age,
+        sex: formData.sex,
+        sports_category: formData.sports_category,
+        goal: formData.goal,
+        calories: Math.round(calories),
+        carbs: Math.round(macros.carbs),
+        protein: Math.round(macros.protein),
+        fat: Math.round(macros.fat),
+      };
+
+      const response = await axios.post(`${BACKEND_URL}/profile/submit/${userId}`, payload);
 
       Alert.alert("Success", response.data.message);
       navigation.navigate("Main");
+
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", error.response?.data?.detail || "Something went wrong");
+
+      let message = "Something went wrong";
+      if (error?.response?.data?.detail) {
+        message = error.response.data.detail;
+      } else if (error?.message) {
+        message = error.message;
+      }
+      Alert.alert("Error", message);
     }
   };
-
 
   return (
     <KeyboardAvoidingView
@@ -49,161 +89,167 @@ export default function Form({ navigation }) {
       style={{ flex: 1, padding: 20, backgroundColor: '#fff' }}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.formTitle}>Form</Text>
-          <Text style={styles.formSubtitle}>
-            Form description
-          </Text>
+          <Text style={styles.formSubtitle}>Form description</Text>
         </View>
 
+        {/* Weight & Height */}
         <View style={styles.row}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>First Field</Text>
+            <Text style={styles.label}>Weight</Text>
             <TextInput
               style={styles.input}
-              value={formData.first_field}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, first_field: text }))}
+              value={formData.weight}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, weight: text }))}
+              keyboardType="numeric"
             />
           </View>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Second Field</Text>
+            <Text style={styles.label}>Height</Text>
             <TextInput
               style={styles.input}
-              value={formData.second_field}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, second_field: text }))}
+              value={formData.height}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, height: text }))}
+              keyboardType="numeric"
             />
           </View>
         </View>
 
+        {/* Age & Sex */}
         <View style={styles.row}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Third Field</Text>
-            <TouchableOpacity
-              style={styles.dropdownButton}
-              onPress={() => setShowThirdDD(true)}
-            >
-              <Text style={styles.dropdownButtonText}>
-                {formData.third_field}
-              </Text>
-              <Text style={styles.dropdownArrow}>▼</Text>
-            </TouchableOpacity>
+            <Text style={styles.label}>Age</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.age}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, age: text }))}
+              keyboardType="numeric"
+            />
           </View>
-
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Fourth Field</Text>
+            <Text style={styles.label}>Sex</Text>
             <TouchableOpacity
               style={styles.dropdownButton}
-              onPress={() => setShowFourthDD(true)}
+              onPress={() => setShowSexDD(true)}
             >
-              <Text style={styles.dropdownButtonText}>
-                {formData.fourth_field}
-              </Text>
+              <Text style={styles.dropdownButtonText}>{formData.sex || "Select"}</Text>
               <Text style={styles.dropdownArrow}>▼</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Sports Category */}
         <View style={styles.fullRow}>
           <View style={styles.inputGroup2}>
-            <Text style={styles.label}>Fifth Field</Text>
+            <Text style={styles.label}>Sports Category</Text>
             <TouchableOpacity
               style={styles.dropdownButton}
-              onPress={() => setShowFifthDD(true)}
+              onPress={() => setShowSCDD(true)}
             >
               <Text style={styles.dropdownButtonText}>
-                {formData.fifth_field}
+                {SportsCategoryFieldList.find(item => item.value === formData.sports_category)?.label || "Select"}
               </Text>
               <Text style={styles.dropdownArrow}>▼</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Goal */}
+        <View style={styles.fullRow}>
+          <View style={styles.inputGroup2}>
+            <Text style={styles.label}>Goal</Text>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setShowGoalDD(true)}
+            >
+              <Text style={styles.dropdownButtonText}>
+                {GoalFieldList.find(item => item.value === formData.goal)?.label || "Select"}
+              </Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Submit Button */}
         <View style={{ marginVertical: 20 }}>
           <TouchableOpacity
             style={styles.submitButton}
-            onPress={() => handleSubmit()}
+            onPress={handleSubmit}
           >
             <Text style={styles.submitButtonText}>Submit</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Modal */}
-      <Modal visible={showThirdDD} transparent={true}>
+      {/* Modals */}
+      <Modal visible={showSexDD} transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView>
-              {thirdFieldList.map((item) => (
+              {SexFieldList.map((item) => (
                 <TouchableOpacity
                   key={item}
                   style={styles.dropdownOption}
                   onPress={() => {
-                    setFormData((prev) => ({ ...prev, third_field: item }));
-                    setShowThirdDD(false);
+                    setFormData(prev => ({ ...prev, sex: item }));
+                    setShowSexDD(false);
                   }}
                 >
                   <Text style={styles.dropdownOptionText}>{item}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowThirdDD(false)}
-            >
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowSexDD(false)}>
               <Text style={{ textAlign: "center", color: "green" }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <Modal visible={showFourthDD} transparent={true}>
+      <Modal visible={showSCDD} transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView>
-              {fourthFieldList.map((item) => (
+              {SportsCategoryFieldList.map((item) => (
                 <TouchableOpacity
-                  key={item}
+                  key={item.value}
                   style={styles.dropdownOption}
                   onPress={() => {
-                    setFormData((prev) => ({ ...prev, fourth_field: item }));
-                    setShowFourthDD(false);
+                    setFormData(prev => ({ ...prev, sports_category: item.value }));
+                    setShowSCDD(false);
                   }}
                 >
-                  <Text style={styles.dropdownOptionText}>{item}</Text>
+                  <Text style={styles.dropdownOptionText}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowFourthDD(false)}
-            >
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowSCDD(false)}>
               <Text style={{ textAlign: "center", color: "green" }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <Modal visible={showFifthDD} transparent={true}>
+      <Modal visible={showGoalDD} transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView>
-              {fifthFieldList.map((item) => (
+              {GoalFieldList.map((item) => (
                 <TouchableOpacity
-                  key={item}
+                  key={item.value}
                   style={styles.dropdownOption}
                   onPress={() => {
-                    setFormData((prev) => ({ ...prev, fifth_field: item }));
-                    setShowFifthDD(false);
+                    setFormData(prev => ({ ...prev, goal: item.value }));
+                    setShowGoalDD(false);
                   }}
                 >
-                  <Text style={styles.dropdownOptionText}>{item}</Text>
+                  <Text style={styles.dropdownOptionText}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowFifthDD(false)}
-            >
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowGoalDD(false)}>
               <Text style={{ textAlign: "center", color: "green" }}>Cancel</Text>
             </TouchableOpacity>
           </View>

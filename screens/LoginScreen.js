@@ -24,6 +24,20 @@ const Login = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    // --- Validation ---
+    if (!email.trim() && !password.trim()) {
+      Alert.alert("Missing Fields", "Please enter both email and password.");
+      return;
+    }
+    if (!email.trim()) {
+      Alert.alert("Missing Email", "Please enter your email.");
+      return;
+    }
+    if (!password.trim()) {
+      Alert.alert("Missing Password", "Please enter your password.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -55,25 +69,28 @@ const Login = ({ navigation }) => {
       }, 500);
 
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error.response?.data?.detail || "Something went wrong. Please try again."
-      );
       setLoading(false);
+      if (error.response?.status === 401) {
+        Alert.alert("Login Failed", "Incorrect email or password. Please try again.");
+        return;
+      }
+      Alert.alert("Error", error.response?.data?.detail || "Something went wrong. Please try again later.");
     }
   };
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "#f5f5f5" }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.container}>
         <Text style={styles.title}>Login</Text>
 
+        {/* --- Email Label --- */}
+        <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder="Enter your email"
           placeholderTextColor="#888"
           value={email}
           onChangeText={setEmail}
@@ -82,10 +99,12 @@ const Login = ({ navigation }) => {
           editable={!loading}
         />
 
-        <View style={[styles.input, { flexDirection: "row", alignItems: "center" }]}>
+        {/* --- Password Label --- */}
+        <Text style={styles.label}>Password</Text>
+        <View style={[styles.input, styles.passwordContainer]}>
           <TextInput
-            style={{ flex: 1 , color: "black"}}
-            placeholder="Password"
+            style={styles.passwordInput}
+            placeholder="Enter your password"
             placeholderTextColor="#888"
             value={password}
             onChangeText={setPassword}
@@ -101,8 +120,9 @@ const Login = ({ navigation }) => {
           </Pressable>
         </View>
 
+        {/* --- Login Button --- */}
         <TouchableOpacity
-          style={[styles.button, loading && { backgroundColor: "#063b00ff" }]}
+          style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleLogin}
           disabled={loading}
         >
@@ -113,19 +133,14 @@ const Login = ({ navigation }) => {
           )}
         </TouchableOpacity>
 
-        <View
-          style={{
-            marginTop: 20,
-            flexDirection: "row",
-            justifyContent: "center",
-          }}
-        >
+        {/* --- Register Link --- */}
+        <View style={styles.registerContainer}>
           <Text>Don’t have an account yet? </Text>
           <TouchableOpacity
             onPress={() => !loading && navigation.navigate("Register")}
             disabled={loading}
           >
-            <Text style={{ color: "green", fontWeight: "bold" }}>Register</Text>
+            <Text style={styles.registerText}>Register</Text>
           </TouchableOpacity>
         </View>
       </View>

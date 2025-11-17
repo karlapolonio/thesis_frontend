@@ -14,11 +14,6 @@ import { LineChart } from "react-native-chart-kit";
 import { useUser } from "../UserContext";
 import styles, { PALETTE } from "../styles/HomeNavStyle";
 
-////////////////////////////////////////////
-// To be change after getting the formula //
-////////////////////////////////////////////
-
-const GOALS = { calories: 0, protein: 0, carbs: 0, fat: 0};
 const NUTRIENTS = ["calories", "protein", "carbs", "fat"];
 const COLORS = {
   calories: PALETTE.mediumGreen,
@@ -35,6 +30,34 @@ const formatDate = (date) => {
 
 export default function HomeNav({ userId, BACKEND_URL }) {
   const { mealRefreshCounter } = useUser();
+
+  const [GOALS, setGOALS] = useState({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0
+  });
+
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/profile/${userId}`);
+        const data = await res.json();
+
+        setGOALS({
+          calories: data.calories || 0,
+          protein: data.protein || 0,
+          carbs: data.carbs || 0,
+          fat: data.fat || 0,
+        });
+
+      } catch (error) {
+        console.error("Error fetching user goals:", error);
+      }
+    };
+
+    fetchGoals();
+  }, [userId]);
 
   const [todayTotals, setTodayTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [weeklyData, setWeeklyData] = useState([]);
@@ -80,24 +103,24 @@ export default function HomeNav({ userId, BACKEND_URL }) {
 
         setTodayTotals(totals);
 
-        Object.keys(totals).forEach((key) =>
+        Object.keys(totals).forEach((key) => {
+          const goal = GOALS[key] || 0;
+          const progress = goal > 0 ? Math.min(totals[key] / goal, 1) : 0;
+
           Animated.timing(animatedValues[key], {
-            toValue: Math.min((totals[key] / GOALS[key]) * 100, 100),
+            toValue: progress,
             duration: 600,
             useNativeDriver: false,
-          }).start()
-        );
+          }).start();
+        });
+
       } catch (err) {
         console.error(err);
       }
     };
 
     fetchToday();
-  }, [mealRefreshCounter, userId]);
-
-  //////////////////////////////////////////////////////
-  // Fetch Last 6 Days Nutrition Data and Fetch today //
-  //////////////////////////////////////////////////////
+  }, [mealRefreshCounter, userId, GOALS]);
 
   useEffect(() => {
     const fetchWeekly = async () => {
@@ -134,24 +157,39 @@ export default function HomeNav({ userId, BACKEND_URL }) {
     fetchWeekly();
   }, [mealRefreshCounter, userId]);
 
-  const renderBar = (label, value, goal, anim, color) => (
-    <View style={{ marginBottom: 10 }}>
-      <Text style={styles.label}>
-        {label}: {value.toFixed(0)} / {goal}
-      </Text>
-      <View style={styles.barBackground}>
-        <Animated.View
-          style={[
-            styles.barFill,
-            {
+  const renderBar = (label, value, goal, anim, color) => {
+  const progress = goal > 0 ? Math.min(value / goal, 1) : 0;
+
+  return (
+      <View style={{ marginBottom: 10 }}>
+        <Text style={styles.label}>
+          {label}: {value.toFixed(0)} / {goal}
+        </Text>
+
+        <View
+          style={{
+            width: "100%",
+            height: 14,
+            backgroundColor: "#E0E0E0",
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          <Animated.View
+            style={{
+              height: "100%",
               backgroundColor: color,
-              width: anim.interpolate({ inputRange: [0, 100], outputRange: ["0%", "100%"] }),
-            },
-          ]}
-        />
+              width: anim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["0%", "100%"],
+              }),
+            }}
+          />
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

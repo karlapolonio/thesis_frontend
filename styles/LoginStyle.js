@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 export default StyleSheet.create({
   container: {
@@ -32,6 +32,37 @@ export default StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  // --- Merged enhanced styles ---
+  label: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 5,
+    fontWeight: "500",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: Platform.OS === "ios" ? 12 : 8,
+    fontSize: 16,
+    color: "#000",
+  },
+  buttonDisabled: {
+    backgroundColor: "#1e6c1e",
+  },
+  registerContainer: {
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  registerText: {
+    color: "green",
     fontWeight: "bold",
   },
 });
