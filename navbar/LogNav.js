@@ -20,7 +20,7 @@ const getLocalDateString = (date = new Date()) => {
   return localTime.toISOString().split('T')[0];
 };
 
-export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
+export default function LogNav({ userId, BACKEND_URL }) {
   const { mealRefreshCounter, triggerMealRefresh } = useUser();
   const [selectedDate, setSelectedDate] = useState(getLocalDateString());
   const [groupedMeals, setGroupedMeals] = useState({});
@@ -36,9 +36,7 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
   const fetchMeals = async (date) => {
     try {
       setLoadingMeals(true);
-      const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`, {
-        headers: { "x-api-key": API_KEY },
-      });
+      const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`);
 
       if (!res.ok) {
         setGroupedMeals({});
@@ -71,10 +69,7 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
 
   const fetchFoodLogs = async (meal) => {
     try {
-      const res = await fetch(
-        `${BACKEND_URL}/log_food/?user_id=${userId}&meal_id=${meal.id}`,
-        { headers: { "x-api-key": API_KEY } }
-      );
+      const res = await fetch(`${BACKEND_URL}/log_food/?user_id=${userId}&meal_id=${meal.id}`);
 
       if (!res.ok) {
         setFoodLogs([]);
@@ -106,10 +101,7 @@ export default function LogNav({ userId, BACKEND_URL, API_KEY }) {
           style: "destructive",
           onPress: async () => {
             try {
-              const res = await fetch(`${BACKEND_URL}/meal/${mealId}`, {
-                method: "DELETE",
-                headers: { "x-api-key": API_KEY },
-              });
+              const res = await fetch(`${BACKEND_URL}/meal/${mealId}`, {method: "DELETE",});
               const data = await res.json();
               if (res.ok) {
                 setModalVisible(false);

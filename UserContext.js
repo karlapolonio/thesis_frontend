@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const { API_KEY, BACKEND_URL } = Constants.expoConfig.extra;
+const { BACKEND_URL } = Constants.expoConfig.extra;
 
 const UserContext = createContext();
 
@@ -49,7 +49,6 @@ export const UserProvider = ({ children }) => {
         mealRefreshCounter,
         setMealRefreshCounter,
         triggerMealRefresh,
-        API_KEY,
         BACKEND_URL,
         isLoadingUser,
         logout,

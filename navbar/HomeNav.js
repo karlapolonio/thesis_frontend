@@ -33,7 +33,7 @@ const formatDate = (date) => {
   return `${month}-${day}`;
 };
 
-export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
+export default function HomeNav({ userId, BACKEND_URL }) {
   const { mealRefreshCounter } = useUser();
 
   const [todayTotals, setTodayTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
@@ -65,9 +65,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
           .toISOString()
           .split("T")[0];
 
-        const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`, {
-          headers: { "x-api-key": API_KEY },
-        });
+        const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`);
         const meals = await res.json();
 
         const totals = meals.reduce(
@@ -113,9 +111,7 @@ export default function HomeNav({ userId, BACKEND_URL, API_KEY }) {
             .toISOString()
             .split("T")[0];
 
-          const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`, {
-            headers: { "x-api-key": API_KEY },
-          });
+          const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`);
           const meals = await res.json();
 
           const day = { calories: 0, protein: 0, carbs: 0, fat: 0 };

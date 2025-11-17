@@ -1,1 +1,0 @@
-export const BACKEND_URL = 'https://thesis-backend-6jca.onrender.com';

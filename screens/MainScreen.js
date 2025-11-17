@@ -14,7 +14,7 @@ const Tab = createBottomTabNavigator();
 
 export default function Main() {
   const tabRef = useRef();
-  const { userId, API_KEY, BACKEND_URL } = useUser();
+  const { userId, BACKEND_URL } = useUser();
 
   return (
     <Tab.Navigator
@@ -40,7 +40,7 @@ export default function Main() {
           tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
         }}
       >
-        {() => <HomeNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+        {() => <HomeNav userId={userId} BACKEND_URL={BACKEND_URL} />}
       </Tab.Screen>
 
       <Tab.Screen
@@ -49,7 +49,7 @@ export default function Main() {
           tabBarIcon: ({ color }) => <MaterialIcons name="calendar-today" size={28} color={color} />,
         }}
       >
-        {() => <LogNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+        {() => <LogNav userId={userId} BACKEND_URL={BACKEND_URL} />}
       </Tab.Screen>
 
       <Tab.Screen
@@ -74,7 +74,7 @@ export default function Main() {
           },
         })}
       >
-        {() => <HomeNav userId={userId} API_KEY={API_KEY} BACKEND_URL={BACKEND_URL} />}
+        {() => <HomeNav userId={userId} BACKEND_URL={BACKEND_URL} />}
       </Tab.Screen>
 
       <Tab.Screen
@@ -87,7 +87,6 @@ export default function Main() {
           <ResultNav
             photoUri={route.params?.photoUri}
             userId={userId}
-            API_KEY={API_KEY}
             BACKEND_URL={BACKEND_URL}
           />
         )}

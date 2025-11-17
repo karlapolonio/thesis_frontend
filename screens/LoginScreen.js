@@ -17,7 +17,7 @@ import { useUser } from "../UserContext";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
-  const { setUserId, BACKEND_URL, API_KEY } = useUser();
+  const { setUserId, BACKEND_URL } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,8 +29,7 @@ const Login = ({ navigation }) => {
     try {
       const response = await axios.post(
         `${BACKEND_URL}/account/login`,
-        { email, password },
-        { headers: { "x-api-key": API_KEY } }
+        { email, password }
       );
 
       const { has_profile, user } = response.data;

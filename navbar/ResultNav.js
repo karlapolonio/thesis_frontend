@@ -16,7 +16,7 @@ import styles from "../styles/ResultStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUser } from "../UserContext";
 
-export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
+export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
   const API_PREDICT_URL = `${BACKEND_URL}/predict/food`;
   const [predictions, setPredictions] = useState([]);
   const [segmentedImage, setSegmentedImage] = useState(null);
@@ -39,9 +39,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
         });
 
         const response = await axios.post(API_PREDICT_URL, formData, {
-          headers: { "Content-Type": "multipart/form-data",
-                     "x-api-key": API_KEY
-          },
+          headers: { "Content-Type": "multipart/form-data"},
         });
 
         const { predictions: preds, image } = response.data;
@@ -99,9 +97,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
         total_protein: totals.protein,
         total_carbs: totals.carbs,
         total_fat: totals.fat,
-        created_at: localISOTime,
-      }, {
-        headers: { "x-api-key": API_KEY },
+        created_at: localISOTime
       });
 
       const mealId = mealResponse.data.id;
@@ -125,8 +121,6 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL, API_KEY }) {
         user_id: userId,
         meal_id: mealId,
         foods: foodsPayload,
-      }, {
-        headers: { "x-api-key": API_KEY },
       });
 
       setTimeout(() => {

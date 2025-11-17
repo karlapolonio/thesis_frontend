@@ -24,7 +24,7 @@ const Register = ({ navigation }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { BACKEND_URL, API_KEY } = useUser();
+  const { BACKEND_URL } = useUser();
 
   const handleRegister = async () => {
     if (!username || !email || !password || !confirmPassword) {
@@ -51,8 +51,7 @@ const Register = ({ navigation }) => {
     try {
       const response = await axios.post(
         `${BACKEND_URL}/account/register`,
-        { username, email, password },
-        { headers: { "x-api-key": API_KEY } }
+        { username, email, password }
       );
 
       Alert.alert("Success", "Account created!");

@@ -5,7 +5,7 @@ import { useUser } from "../UserContext";
 import axios from "axios";
 
 export default function Form({ navigation }) {
-  const { userId, BACKEND_URL, API_KEY } = useUser();
+  const { userId, BACKEND_URL } = useUser();
 
   const [formData, setFormData] = useState({
     userId: userId,
@@ -31,13 +31,7 @@ export default function Form({ navigation }) {
         return;
       }
 
-      const response = await axios.post(`${BACKEND_URL}/profile/submit/${userId}`, formData,
-        {
-          headers: {
-            'x-api-key': API_KEY
-          },
-        }
-      );
+      const response = await axios.post(`${BACKEND_URL}/profile/submit/${userId}`, formData);
 
       Alert.alert("Success", response.data.message);
       navigation.navigate("Main");
