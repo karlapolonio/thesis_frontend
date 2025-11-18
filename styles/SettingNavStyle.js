@@ -1,19 +1,19 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-    container: {
+  container: {
     padding: 20,
-    backgroundColor: "#fafafaff",
+    backgroundColor: "#ffffff", 
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#1e7d32",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 20, 
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 20, 
     backgroundColor: "#ffffff",
     borderRadius: 12,
     padding: 15,
@@ -24,8 +24,8 @@ export default StyleSheet.create({
     elevation: 3,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 16, 
+    fontWeight: "600",
     color: "#145a32",
     marginBottom: 10,
   },
@@ -39,19 +39,19 @@ export default StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14, 
     textAlign: "center",
   },
   logoutButton: {
     backgroundColor: "#c0392b",
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
   },
   logoutText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });

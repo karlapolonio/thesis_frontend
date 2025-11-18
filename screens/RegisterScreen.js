@@ -74,7 +74,7 @@ const Register = ({ navigation }) => {
     >
       <View style={styles.container}>
         <Text style={styles.title}>Registration</Text>
-
+        <Text style={styles.label}>Username</Text>
         <TextInput
           style={styles.input}
           placeholderTextColor="#888"
@@ -83,7 +83,7 @@ const Register = ({ navigation }) => {
           onChangeText={setUsername}
           editable={!loading}
         />
-
+        <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -94,7 +94,7 @@ const Register = ({ navigation }) => {
           autoCapitalize="none"
           editable={!loading}
         />
-
+        <Text style={styles.label}>Password</Text>
         <View style={[styles.input, { flexDirection: "row", alignItems: "center" }]}>
           <TextInput
             style={{ flex: 1, color: "black"}}
@@ -113,7 +113,7 @@ const Register = ({ navigation }) => {
             />
           </Pressable>
         </View>
-
+        <Text style={styles.label}>Confirm Password</Text>
         <View style={[styles.input, { flexDirection: "row", alignItems: "center" }]}>
           <TextInput
             style={{ flex: 1, color: "black" }}

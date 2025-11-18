@@ -24,7 +24,6 @@ const Login = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    // --- Validation ---
     if (!email.trim() && !password.trim()) {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;

@@ -9,6 +9,8 @@ import Login from "./screens/LoginScreen";
 import Form from "./screens/FormScreen";
 import Main from "./screens/MainScreen";
 import StartupScreen from "./screens/StartUpScreen";
+import AboutScreen from "./screens/AboutScreen";
+import PrivacyPolicyScreen from "./screens/PrivacyPolicyScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +31,8 @@ export default function App() {
               <Stack.Screen name="Register" component={Register}/>
               <Stack.Screen name="Form" component={Form}/>
               <Stack.Screen name="Main" component={Main}/>
+              <Stack.Screen name="About" component={AboutScreen} />
+              <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
             </Stack.Navigator>
           </NavigationContainer>
         </UserProvider>
