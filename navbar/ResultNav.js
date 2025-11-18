@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  Modal,
+  Pressable,
 } from "react-native";
 import axios from "axios";
 import styles from "../styles/ResultStyles";
@@ -25,6 +27,8 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
   const { setMealRefreshCounter } = useUser();
   const [saving, setSaving] = useState(false);
 
+  const [mealTypeModalVisible, setMealTypeModalVisible] = useState(false);
+
   useEffect(() => {
     if (!photoUri) return;
 
@@ -39,7 +43,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
         });
 
         const response = await axios.post(API_PREDICT_URL, formData, {
-          headers: { "Content-Type": "multipart/form-data"},
+          headers: { "Content-Type": "multipart/form-data" },
         });
 
         const { predictions: preds, image } = response.data;
@@ -83,25 +87,34 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
     });
   };
 
-  const saveMealAndFoods = async () => {
+  // Open meal type modal
+  const openMealTypeModal = () => setMealTypeModalVisible(true);
+
+  // Save meal and foods with selected type
+  const saveMealWithType = async (mealType) => {
     try {
+      setMealTypeModalVisible(false);
       setSaving(true);
+
       const now = new Date();
       const localISOTime = new Date(
         now.getTime() - now.getTimezoneOffset() * 60000
       ).toISOString();
 
+      // Save meal
       const mealResponse = await axios.post(`${BACKEND_URL}/meal/`, {
         user_id: userId,
         total_calories: totals.calories,
         total_protein: totals.protein,
         total_carbs: totals.carbs,
         total_fat: totals.fat,
-        created_at: localISOTime
+        meal_type: mealType, // add meal_type
+        created_at: localISOTime,
       });
 
       const mealId = mealResponse.data.id;
 
+      // Save food logs
       const foodsPayload = predictions.map((item, index) => {
         const baseServing = Number(item?.nutrition?.serving_weight_grams) || 0;
         const serving = Number(servings[index]) || 0;
@@ -114,6 +127,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
           protein: Number((item.nutrition.protein * factor).toFixed(1)),
           carbs: Number((item.nutrition.carbs * factor).toFixed(1)),
           fat: Number((item.nutrition.fat * factor).toFixed(1)),
+          meal_type: mealType,
         };
       });
 
@@ -125,8 +139,8 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
 
       setTimeout(() => {
         setSaving(false);
-        Alert.alert("Success", "Meal and food logs saved successfully!");
-        triggerMealRefresh();
+        Alert.alert("Success", `Meal (${mealType}) and food logs saved successfully!`);
+        setMealRefreshCounter(prev => prev + 1);
       }, 1000);
 
     } catch (error) {
@@ -136,49 +150,24 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
     }
   };
 
-  const triggerMealRefresh = () => {
-    setMealRefreshCounter(prev => prev + 1);
-  };
+  const triggerMealRefresh = () => setMealRefreshCounter(prev => prev + 1);
 
   if (!photoUri) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#fff",
-          padding: 20,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 20,
-            fontWeight: "bold",
-            color: "#145a32",
-            textAlign: "center",
-            marginBottom: 10,
-          }}
-        >
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff", padding: 20 }}>
+        <Text style={{ fontSize: 20, fontWeight: "bold", color: "#145a32", textAlign: "center", marginBottom: 10 }}>
           Please capture an image first.
         </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            color: "#1a2a20ff",
-            textAlign: "center",
-          }}
-        >
+        <Text style={{ fontSize: 14, color: "#1a2a20ff", textAlign: "center" }}>
           Make sure your image clearly shows the food for accurate analysis.
         </Text>
       </View>
     );
   }
 
-
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center",  backgroundColor: "#fff"}}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
         <ActivityIndicator size="large" color="green" />
         <Text style={{ marginTop: 10, color: "green" }}>Processing image</Text>
       </View>
@@ -187,18 +176,14 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}>
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.section}>
             <Text style={styles.title}>Captured Image</Text>
             <Image source={{ uri: photoUri }} style={styles.image} resizeMode="contain" />
           </View>
 
-          {predictions.length > 0 ? (
+          {predictions.length > 0 && (
             <>
               {segmentedImage && (
                 <View style={styles.section}>
@@ -211,7 +196,6 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
                 </View>
               )}
 
-              {/* Nutrition Totals */}
               <View style={styles.section}>
                 <Text style={styles.title}>Nutritional Analysis</Text>
                 <View style={styles.totalBoxContainer}>
@@ -233,7 +217,6 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
                   </View>
                 </View>
 
-                {/* Predictions List */}
                 {predictions.map((item, index) => {
                   const baseServing = Number(item?.nutrition?.serving_weight_grams) || 0;
                   const serving = Number(servings[index]) || 0;
@@ -251,9 +234,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
                       <Text style={styles.predText}>{item.label}</Text>
 
                       <View style={styles.servingRow}>
-                        <Text style={styles.nutritionText}>
-                          <Text style={{ fontWeight: "bold" }}>Serving Size:</Text>
-                        </Text>
+                        <Text style={styles.nutritionText}><Text style={{ fontWeight: "bold" }}>Serving Size:</Text></Text>
                         <TextInput
                           style={styles.input}
                           value={String(servings[index] ?? "")}
@@ -285,7 +266,7 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
                     width: "50%",
                     alignSelf: "center",
                   }}
-                  onPress={saveMealAndFoods}
+                  onPress={openMealTypeModal}
                   disabled={saving}
                 >
                   {saving ? (
@@ -298,13 +279,39 @@ export default function ResultNav({ photoUri, userId, BACKEND_URL }) {
                 </TouchableOpacity>
               </View>
             </>
-          ) : (
-            <View style={{ padding: 20, alignItems: "center" }}>
-              <Text style={{ fontSize: 16, color: "#555", textAlign: "center" }}>
-                No food detected. Please try capturing the image again.
-              </Text>
-            </View>
           )}
+
+          {/* Meal Type Modal */}
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={mealTypeModalVisible}
+            onRequestClose={() => setMealTypeModalVisible(false)}
+          >
+            <View style={{ flex:1, justifyContent:"center", alignItems:"center", backgroundColor:"rgba(0,0,0,0.5)" }}>
+              <View style={{ width:"80%", backgroundColor:"#fff", padding:20, borderRadius:12 }}>
+                <Text style={{ fontSize:18, fontWeight:"bold", marginBottom:10 }}>Select Meal Type</Text>
+
+                {["Breakfast","Lunch","Dinner","Snack"].map((type) => (
+                  <Pressable
+                    key={type}
+                    style={{ backgroundColor:"green", padding:12, borderRadius:8, marginVertical:5, alignItems:"center" }}
+                    onPress={() => saveMealWithType(type)}
+                  >
+                    <Text style={{ color:"#fff", fontWeight:"bold" }}>{type}</Text>
+                  </Pressable>
+                ))}
+
+                <Pressable
+                  style={{ backgroundColor:"#c0392b", padding:12, borderRadius:8, marginTop:10, alignItems:"center" }}
+                  onPress={() => setMealTypeModalVisible(false)}
+                >
+                  <Text style={{ color:"#fff", fontWeight:"bold" }}>Cancel</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Modal>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

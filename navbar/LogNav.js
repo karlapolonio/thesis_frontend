@@ -29,6 +29,8 @@ export default function LogNav({ userId, BACKEND_URL }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [loadingMeals, setLoadingMeals] = useState(false);
 
+  const MEAL_ORDER = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+
   useEffect(() => {
     fetchMeals(selectedDate);
   }, [selectedDate, mealRefreshCounter]);
@@ -37,7 +39,6 @@ export default function LogNav({ userId, BACKEND_URL }) {
     try {
       setLoadingMeals(true);
       const res = await fetch(`${BACKEND_URL}/meal/?user_id=${userId}&date=${date}`);
-
       if (!res.ok) {
         setGroupedMeals({});
         return;
@@ -49,13 +50,12 @@ export default function LogNav({ userId, BACKEND_URL }) {
         return;
       }
 
-      const sorted = data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      // Group meals by meal_type
       const grouped = {};
-
-      sorted.forEach((meal) => {
-        const time = formatTime(meal.created_at);
-        if (!grouped[time]) grouped[time] = [];
-        grouped[time].push(meal);
+      data.forEach((meal) => {
+        const type = meal.meal_type || 'Other';
+        if (!grouped[type]) grouped[type] = [];
+        grouped[type].push(meal);
       });
 
       setGroupedMeals(grouped);
@@ -70,15 +70,7 @@ export default function LogNav({ userId, BACKEND_URL }) {
   const fetchFoodLogs = async (meal) => {
     try {
       const res = await fetch(`${BACKEND_URL}/log_food/?user_id=${userId}&meal_id=${meal.id}`);
-
-      if (!res.ok) {
-        setFoodLogs([]);
-        setSelectedMeal(meal);
-        setModalVisible(true);
-        return;
-      }
-
-      const data = await res.json();
+      const data = await res.ok ? await res.json() : [];
       setFoodLogs(Array.isArray(data) ? data : []);
       setSelectedMeal(meal);
       setModalVisible(true);
@@ -101,7 +93,7 @@ export default function LogNav({ userId, BACKEND_URL }) {
           style: "destructive",
           onPress: async () => {
             try {
-              const res = await fetch(`${BACKEND_URL}/meal/${mealId}`, {method: "DELETE",});
+              const res = await fetch(`${BACKEND_URL}/meal/${mealId}`, { method: "DELETE" });
               const data = await res.json();
               if (res.ok) {
                 setModalVisible(false);
@@ -120,30 +112,6 @@ export default function LogNav({ userId, BACKEND_URL }) {
     );
   };
 
-  const formatTime = (isoString) => {
-    const date = new Date(isoString);
-    let hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-  };
-
-  const getNumberedMeals = () => {
-    let counter = 1;
-    const numbered = {};
-    Object.keys(groupedMeals)
-      .sort((a, b) => new Date(`1970-01-01T${a}`) - new Date(`1970-01-01T${b}`))
-      .forEach((time) => {
-        numbered[time] = groupedMeals[time].map((meal) => ({
-          ...meal,
-          mealNumber: counter++,
-        }));
-      });
-    return numbered;
-  };
-
-  const numberedMeals = getNumberedMeals();
   const todayStr = getLocalDateString();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -159,11 +127,13 @@ export default function LogNav({ userId, BACKEND_URL }) {
     })}`;
   };
 
+  const sortedMealTypes = [
+    ...MEAL_ORDER.filter(type => groupedMeals[type]),
+    ...Object.keys(groupedMeals).filter(type => !MEAL_ORDER.includes(type))
+  ];
+
   return (
-    <ScrollView
-      style={{ flex: 1, padding: 15, backgroundColor: '#ffffffff' }}
-      contentContainerStyle={{ paddingBottom: 30 }}
-    >
+    <ScrollView style={{ flex: 1, padding: 15, backgroundColor: '#fff' }} contentContainerStyle={{ paddingBottom: 30 }}>
       <Text style={styles.calendarTitle}>{moment(selectedDate).format('MMMM YYYY')}</Text>
 
       <CalendarStrip
@@ -193,53 +163,44 @@ export default function LogNav({ userId, BACKEND_URL }) {
             containerStyle: { backgroundColor: '#145a32', borderRadius: 20 },
           },
         ]}
-        onDateSelected={(date) => {
-          setSelectedDate(date.format('YYYY-MM-DD'));
-        }}
+        onDateSelected={(date) => setSelectedDate(date.format('YYYY-MM-DD'))}
       />
 
-      {/* Selected Day Title */}
       <Text style={styles.select}>{formatDateTitle(selectedDate)}</Text>
 
-      {/* Meals List */}
       {loadingMeals ? (
         <View style={{ marginTop: 30, alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#1e7d32" />
         </View>
-      ) : Object.keys(numberedMeals).length === 0 ? (
+      ) : sortedMealTypes.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No meals recorded for this day.</Text>
         </View>
       ) : (
-        Object.keys(numberedMeals).map((time) => (
-          <View key={time} style={{ marginBottom: 15 }}>
-            <Text style={styles.timeHeader}>{time}</Text>
-            {numberedMeals[time].map((meal) => (
+        sortedMealTypes.map((mealType) => (
+          <View key={mealType} style={{ marginBottom: 20 }}>
+            <Text style={styles.timeHeader}>{mealType}</Text>
+            {groupedMeals[mealType].map((meal, idx) => (
               <TouchableOpacity
                 key={meal.id}
                 style={styles.mealCard}
                 onPress={() => fetchFoodLogs(meal)}
               >
                 <View style={styles.mealHeader}>
-                  <Text style={styles.mealName}>
-                    {meal.name || `Meal ${meal.mealNumber}`}
-                  </Text>
-                  <Text style={styles.mealCalories}>
-                    {meal.total_calories.toFixed(1)} kcal
-                  </Text>
+                  <Text style={styles.mealName}>{meal.name || `Meal ${idx + 1}`}</Text>
+                  <Text style={styles.mealCalories}>Calories: {meal.total_calories.toFixed(1)} kcal</Text>
                 </View>
                 <View style={styles.macrosRow}>
-                  <Text style={styles.macroBadge}>{meal.total_protein.toFixed(1)}g P</Text>
-                  <Text style={styles.macroBadge}>{meal.total_carbs.toFixed(1)}g C</Text>
-                  <Text style={styles.macroBadge}>{meal.total_fat.toFixed(1)}g F</Text>
+                  <Text style={styles.macroBadge}>Protein: {meal.total_protein.toFixed(1)} g</Text>
+                  <Text style={styles.macroBadge}>Carbs: {meal.total_carbs.toFixed(1)} g</Text>
+                  <Text style={styles.macroBadge}>Fat: {meal.total_fat.toFixed(1)} g</Text>
                 </View>
               </TouchableOpacity>
             ))}
           </View>
         ))
       )}
-
-      {/* Modal */}
+      
       <Modal
         animationType="slide"
         transparent={true}
@@ -249,7 +210,7 @@ export default function LogNav({ userId, BACKEND_URL }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              Food Logs for {selectedMeal?.name || `Meal ${selectedMeal?.mealNumber}`}
+              Food Logs
             </Text>
 
             <FlatList
@@ -259,8 +220,10 @@ export default function LogNav({ userId, BACKEND_URL }) {
                 <View style={styles.foodItem}>
                   <Text style={styles.foodName}>{item.food_name}</Text>
                   <Text style={styles.foodMacros}>
-                    {item.calories.toFixed(1)} kcal • {item.protein.toFixed(1)}g P •{' '}
-                    {item.carbs.toFixed(1)}g C • {item.fat.toFixed(1)}g F
+                    Calories: {item.calories.toFixed(1)} kcal{'\n'}
+                    Protein: {item.protein.toFixed(1)} g{'\n'}
+                    Carbs: {item.carbs.toFixed(1)} g{'\n'}
+                    Fat: {item.fat.toFixed(1)} g
                   </Text>
                 </View>
               )}
